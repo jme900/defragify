@@ -72,29 +72,7 @@ claude plugin marketplace add jme900/defragify
 claude plugin install defragify@defragify
 ```
 
-If `claude` isn't on your PATH, the extension bundles it in `resources/native-binary/` inside its folder, named `claude` on macOS and Linux and `claude.exe` on Windows:
-
-- macOS and Linux: `~/.vscode/extensions/anthropic.claude-code-<version>-<platform>/resources/native-binary/claude`
-- Windows: `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<version>-win32-x64\resources\native-binary\claude.exe`
-
-(Cursor and other VS Code forks keep extensions in their own folder, such as `~/.cursor/extensions`.) Start a new session or reload the window afterwards so the skill loads.
-
-**Had it as work-in-flight?** That was this plugin's old name. Remove the old one and install as above:
-
-```
-claude plugin uninstall work-in-flight@work-in-flight
-claude plugin marketplace remove work-in-flight
-```
-
-Then rename your old data folder to keep your board, settings and labels:
-
-```
-# macOS, Linux, Git Bash
-mv ~/.claude/work-in-flight ~/.claude/defragify
-
-# Windows PowerShell
-Rename-Item "$HOME\.claude\work-in-flight" defragify
-```
+Start a new session afterwards so the skill loads.
 
 Then run `/defragify`. The first run asks four questions: which sessions count, which tracker you use, how new tickets should be written, and how many days to keep. It then sorts your sessions and publishes your board as a private artifact on claude.ai. Run it again whenever you want the board brought up to date.
 

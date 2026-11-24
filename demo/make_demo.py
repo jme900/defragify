@@ -238,7 +238,7 @@ def main():
     labels, tracker = {}, {}
     for name, family, status, note, summary, tickets, sessions in THREADS:
         for i, (days_ago, minutes, repo, title) in enumerate(sorted(sessions)):
-            sid = str(uuid.uuid5(uuid.NAMESPACE_URL, f"work-in-flight-demo/{name}/{i}"))
+            sid = str(uuid.uuid5(uuid.NAMESPACE_URL, f"defragify-demo/{name}/{i}"))
             start = NOW - timedelta(days=days_ago, minutes=minutes + 30 * i)
             write_session(sid, repo, f"feature/{name.lower().replace(' ', '-')}", title, start, minutes, 900)
             latest = i == 0
