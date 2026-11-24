@@ -1,0 +1,822 @@
+<title>Work in Flight</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a sentence and an hours chart up top, one control bar, then the open columns; finished work folds away */
+:root {
+  --bg: #f3f5f8; --surface: #ffffff; --line: #dfe3ea; --ink: #18202c; --muted: #5f6878;
+  --accent: #2f5bd3; --accent-bg: #e7edfb; --fade: #c2412d; --fade-bg: #fbeae6;
+  --idea: #7a4fc9; --building: #2f5bd3; --waiting: #b7791f; --shipped: #2f8a55; --dropped: #8a919c;
+  --cell: #e6e9ef;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12161d; --surface: #1a2029; --line: #2a323e; --ink: #e5e9ef; --muted: #98a1af;
+  --accent: #7d9bf0; --accent-bg: #222c40; --fade: #ef8a76; --fade-bg: #3a221e;
+  --idea: #b296ec; --building: #7d9bf0; --waiting: #e0ad5a; --shipped: #6cc492; --dropped: #8a919c;
+  --cell: #262d38; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12161d; --surface: #1a2029; --line: #2a323e; --ink: #e5e9ef; --muted: #98a1af;
+  --accent: #7d9bf0; --accent-bg: #222c40; --fade: #ef8a76; --fade-bg: #3a221e;
+  --idea: #b296ec; --building: #7d9bf0; --waiting: #e0ad5a; --shipped: #6cc492; --dropped: #8a919c;
+  --cell: #262d38; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 13px; line-height: 1.4; }
+.wrap { max-width: 1400px; margin: 0 auto; padding-block: 18px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 14px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button { font: inherit; }
+
+/* header */
+.head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 420px); gap: 10px 28px; align-items: end; }
+h1 { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+.sent { font-size: 19px; line-height: 1.4; margin: 0; text-wrap: balance; max-width: 60ch; }
+.sent b { font-weight: 600; }
+.sent .cold { color: var(--fade); }
+.chart { display: grid; gap: 4px; min-width: 0; }
+.bars { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 2px; align-items: end; height: 54px; }
+.bars i { background: var(--cell); border-radius: 2px 2px 0 0; min-height: 2px; }
+.bars i.in { background: var(--accent); }
+.axis { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { .head { grid-template-columns: 1fr; } .sent { font-size: 17px; } }
+
+/* control bar */
+.bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; position: relative; }
+#q { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 6px; padding: 4px 10px; width: 240px; max-width: 100%; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); padding: 2px; gap: 2px; }
+.seg button { border: 0; background: none; color: var(--muted); font-size: 12px; padding: 2px 9px; border-radius: 5px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent-bg); color: var(--accent); font-weight: 500; }
+.chip { font-size: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  border-radius: 999px; padding: 2px 10px; cursor: pointer; display: inline-flex; gap: 5px; align-items: center; }
+.chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); display: inline-block; flex: none; }
+.panel { position: absolute; top: calc(100% + 6px); right: 0; z-index: 15; width: min(420px, 100%); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 30px rgb(0 0 0 / .14); padding: 12px; display: grid; gap: 10px; }
+.panel .row { display: grid; gap: 5px; }
+.panel .row > span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.panel .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.spacer { flex: 1; }
+
+/* fading */
+.fading { background: var(--fade-bg); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
+.fading h2 { color: var(--fade); }
+.frow { display: grid; grid-template-columns: 56px minmax(0, 220px) minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.frow .left { font-family: var(--mono); font-weight: 500; color: var(--fade); font-variant-numeric: tabular-nums; }
+.frow .n { font-weight: 600; }
+.frow .note { color: var(--muted); min-width: 0; }
+h2 { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin: 0; color: var(--muted);
+  display: flex; gap: 6px; align-items: center; }
+h2 .ct { font-family: var(--mono); font-weight: 400; }
+@media (max-width: 560px) { .frow { grid-template-columns: 48px minmax(0, 1fr); } .frow .note { grid-column: 2; } }
+
+/* board */
+.board { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; align-items: start; }
+.col { display: grid; gap: 8px; min-width: 0; align-content: start; }
+.drop { display: grid; gap: 8px; min-height: 40px; border-radius: 8px; padding: 2px; margin: -2px; }
+.drop.over { background: var(--accent-bg); outline: 2px dashed var(--accent); }
+.famh { font-size: 11px; color: var(--muted); padding: 4px 2px 0; border-top: 1px dashed var(--line); }
+.famh:first-child { border-top: 0; padding-top: 0; }
+.cleared { display: flex; gap: 10px; align-items: center; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 10px; }
+.cleared button { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 0; font-size: 13px; }
+.removed { display: grid; gap: 6px; }
+.removed .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+.empty { color: var(--muted); font-size: 12px; padding: 4px 0; }
+.blank { background: var(--surface); border: 1px dashed var(--line); border-radius: 8px; padding: 24px; color: var(--muted); text-align: center; }
+footer { color: var(--muted); font-size: 11px; }
+
+/* cards */
+.card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px;
+  display: grid; gap: 5px; opacity: var(--o, 1); transition: opacity .15s; cursor: pointer; }
+.card[draggable="true"] { cursor: grab; }
+.card:hover, .card:focus-within { opacity: 1; }
+.card.open { box-shadow: 0 2px 10px rgb(0 0 0 / .08); border-color: var(--muted); cursor: default; }
+.fam { font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.top .n { font-weight: 600; min-width: 0; }
+.top .right { display: inline-flex; gap: 4px; align-items: center; }
+.ago { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.ago.warn { color: var(--fade); font-weight: 500; }
+.note { color: var(--muted); }
+.note .hint { font-style: italic; }
+.untracked { justify-self: start; font-size: 10.5px; color: var(--muted); border: 1px dashed var(--line); border-radius: 4px; padding: 0 5px; }
+.summary { font-size: 13px; line-height: 1.5; border-top: 1px solid var(--line); padding-top: 6px; }
+.meta { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 10px; font-variant-numeric: tabular-nums; }
+.pin { color: var(--accent); }
+.strip { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 1px; height: 6px; }
+.strip i { background: var(--cell); border-radius: 1px; }
+.strip i.on { background: var(--c); }
+.strip i.out { opacity: .3; }
+.merged { font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.merged button { font-size: 11px; color: var(--muted); background: transparent; border: 0; padding: 0 2px; cursor: pointer; text-decoration: underline; }
+.sess-h { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.sess { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 12px; }
+.sess li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 6px; }
+.sess li span:first-child, .sess li span:last-child { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+.icon-btn { border: 0; background: transparent; color: var(--muted); padding: 3px; border-radius: 5px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
+.icon-btn svg { width: 14px; height: 14px; }
+.icon-btn:hover { color: var(--ink); background: var(--cell); }
+.icon-btn.pen { margin-left: 4px; vertical-align: -3px; opacity: .55; }
+.icon-btn.pen:hover { opacity: 1; }
+.acts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pill { position: relative; display: inline-flex; }
+.pill::before { content: ""; position: absolute; left: 9px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: var(--c); pointer-events: none; }
+.pill select { appearance: none; -webkit-appearance: none; font: inherit; font-size: 12px; font-weight: 500; color: var(--ink);
+  background: var(--bg); border: 1px solid transparent; border-radius: 999px; padding: 2px 22px 2px 21px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238a919c' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center; background-size: 9px 6px; }
+.pill select:hover { border-color: var(--line); }
+.merge-field { flex: 1; min-width: 120px; display: flex; align-items: center; gap: 5px; color: var(--muted); border-bottom: 1px solid transparent; padding: 2px 0; }
+.merge-field:focus-within { border-bottom-color: var(--accent); color: var(--accent); }
+.merge-field svg { width: 13px; height: 13px; flex: none; }
+.merge-field input { font: inherit; font-size: 12px; color: var(--ink); background: transparent; border: 0; outline: 0; padding: 0; width: 100%; min-width: 0; }
+.merge-field input::placeholder { color: var(--muted); }
+.editor { display: grid; gap: 4px; }
+.editor textarea { font: inherit; font-size: 12px; color: var(--ink); background: var(--bg); border: 1px solid var(--accent); border-radius: 4px; padding: 4px 6px; resize: vertical; min-height: 48px; }
+.editor div { display: flex; gap: 6px; }
+
+/* tickets */
+.tickets { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.tk { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 11px; color: var(--ink);
+  background: var(--cell); border-radius: 4px; padding: 0 5px; line-height: 18px; max-width: 100%; }
+.tk .sd { width: 6px; height: 6px; border-radius: 50%; background: var(--c, var(--muted)); flex: none; }
+.tk a { color: inherit; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk a:hover { text-decoration: underline; color: var(--accent); }
+.tk-x { border: 0; background: none; color: var(--muted); padding: 0; margin-left: 1px; cursor: pointer; font-size: 13px; line-height: 1; }
+.tk-x:hover { color: var(--ink); }
+.tk.muted { color: var(--muted); font-family: var(--sans); }
+.tk.failed { color: var(--fade); background: var(--fade-bg); font-family: var(--sans); }
+.tk-add { border: 1px dashed var(--line); background: none; color: var(--muted); border-radius: 4px; width: 20px; height: 18px; padding: 0; cursor: pointer; font-size: 13px; line-height: 1; }
+.tk-add:hover { color: var(--accent); border-color: var(--accent); }
+.tk-new { font-size: 11px; color: var(--accent); background: none; border: 0; padding: 0 2px; cursor: pointer; }
+.tk-new:hover { text-decoration: underline; }
+.tk-input { font-family: var(--mono); font-size: 11px; width: 170px; max-width: 100%; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--accent); border-radius: 4px; padding: 0 5px; line-height: 18px; outline: 0; }
+
+/* drag: drop on a column = move; hold over a card = merge */
+.card.dragging { opacity: .35; transform: scale(.97); }
+.card.hold, .card.armed { opacity: 1; }
+.card.hold::after, .card.armed::after { content: ""; position: absolute; left: 0; bottom: 0; height: 3px; border-radius: 0 0 6px 6px; background: var(--accent); }
+.card.hold::after { width: 0; animation: fill var(--hold) linear forwards; }
+.card.armed::after { width: 100%; }
+.card.hold::before, .card.armed::before { position: absolute; top: -9px; right: 8px; font-size: 10px; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; padding: 1px 6px; border-radius: 999px; background: var(--surface); color: var(--accent); border: 1px solid var(--accent); }
+.card.hold::before { content: "Hold to merge"; }
+.card.armed::before { content: "Release to merge"; background: var(--accent); color: var(--surface); }
+.card.armed { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); animation: pulse 1s ease-in-out infinite; }
+.card.flash { animation: flash .9s ease-out; }
+@keyframes fill { to { width: 100%; } }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px var(--accent-bg); } }
+@keyframes flash { from { box-shadow: 0 0 0 4px var(--accent); } to { box-shadow: 0 0 0 0 transparent; } }
+
+/* toasts */
+.toasts { position: fixed; z-index: 20; display: grid; gap: 8px; width: min(360px, calc(100vw - 32px));
+  right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+.toast { display: flex; align-items: center; gap: 12px; background: var(--ink); color: var(--bg); border-radius: 8px;
+  padding: 10px 12px; font-size: 13px; box-shadow: 0 8px 24px rgb(0 0 0 / .18); animation: toast-in .22s ease-out; }
+.toast span { flex: 1; min-width: 0; }
+.toast button { font-size: 12px; font-weight: 600; color: var(--ink); background: var(--bg); border: 0; border-radius: 5px; padding: 3px 10px; cursor: pointer; }
+.toast.error { background: var(--fade); color: var(--surface); }
+.toast.out { animation: toast-out .18s ease-in forwards; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(12px) scale(.97); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(8px) scale(.97); } }
+@media (prefers-reduced-motion: reduce) {
+  .card, .card.armed, .card.flash, .toast, .toast.out { transition: none; animation: none; }
+  .card.hold::after { animation: none; width: 50%; }
+}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div>
+      <h1>Work in Flight</h1>
+      <p class="sent" id="sent"></p>
+    </div>
+    <div class="chart" id="chart"></div>
+  </header>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Search threads, notes, sessions" aria-label="Search threads">
+    <div class="seg" id="range" role="group" aria-label="Worked on"></div>
+    <span id="untracked-slot"></span>
+    <span class="spacer"></span>
+    <button class="chip" id="view-btn" aria-expanded="false" aria-controls="view">View ▾</button>
+    <div class="panel" id="view" hidden></div>
+  </div>
+  <section class="fading" id="fading" hidden></section>
+  <section class="board" id="board"></section>
+  <div class="cleared" id="cleared" hidden></div>
+  <section class="removed" id="removed" hidden></section>
+  <datalist id="merge-list"></datalist>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const DATA = /*DATA*/null;
+const DAY = 864e5;
+const COLS = [["idea", "Ideas"], ["building", "Building"], ["waiting", "Waiting"], ["shipped", "Done"], ["dropped", "Dropped"]];
+const LABEL = Object.fromEntries(COLS);
+const OPEN = new Set(["idea", "building", "waiting"]);
+const RANK = { idea: 0, building: 1, waiting: 2, shipped: 3 };
+const RANGES = [[1, "Today"], [3, "3 days"], [7, "Week"], [14, "2 weeks"], [DATA.window_days, `${DATA.window_days} days`]];
+const TRACK = DATA.tracker.kind !== "none";
+const ENTRIES = DATA.tracker.entries || {};
+const ID_RE = new RegExp(DATA.tracker.id_pattern, "g");
+const now = new Date(DATA.generated);
+const dayKey = d => d.toLocaleDateString("en-CA");
+const windowDays = [...Array(DATA.window_days)].map((_, i) => dayKey(new Date(now - (DATA.window_days - 1 - i) * DAY)));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const fmtDate = iso => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+const slug = n => n.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 180) || "thread";
+const newer = (a, b) => new Date(a) > new Date(b);
+const fmtH = h => (h < 10 ? h.toFixed(1) : Math.round(h)) + "h";
+const svg = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON = {
+  trash: svg('<path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3"/>'),
+  restore: svg('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>'),
+  pen: svg('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
+  merge: svg('<circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M8 5c5 0 8 2.5 8 5"/>'),
+};
+document.documentElement.style.setProperty("--n", DATA.window_days);
+
+function linkFor(id) {
+  const e = ENTRIES[id];
+  if (e?.url) return e.url;
+  if (DATA.tracker.kind === "github") {
+    const m = id.match(/^(.+)#(\d+)$/);
+    if (m) return `https://github.com/${m[1]}/issues/${m[2]}`;
+  }
+  return DATA.tracker.link ? DATA.tracker.link.replace("{id}", encodeURIComponent(id)) : "";
+}
+
+const BY_SLUG = new Map(DATA.threads.map(t => [slug(t.name), { ...t, id: slug(t.name) }]));
+
+// Your edits live in the page's database:
+//   state/<slug>    {name, at, status, removed, note, mergedInto, ticketsAdded, ticketsRemoved}
+//   requests/<slug> {name, status: pending|done|failed, via, ticket, message, at}
+// status/removed hold until a newer session or tracker change; a note until a newer session; links and merges until undone.
+const STATE = new Map();
+const REQ = new Map();
+let db = null, comments = null, canWrite = false;
+
+function rootOf(id, seen = new Set()) {
+  const m = STATE.get(id)?.mergedInto;
+  if (!m || seen.has(id) || !BY_SLUG.has(m)) return id;
+  seen.add(id);
+  return rootOf(m, seen);
+}
+
+// Threads as shown: merged threads folded into their target, tickets and edits applied.
+function view() {
+  const groups = new Map();
+  for (const id of BY_SLUG.keys()) {
+    const root = rootOf(id);
+    if (!groups.has(root)) groups.set(root, []);
+    groups.get(root).push(BY_SLUG.get(id));
+  }
+  return [...groups].map(([root, parts]) => {
+    const base = BY_SLUG.get(root);
+    const latest = parts.reduce((a, b) => (newer(b.last, a.last) ? b : a));
+    const by = field => parts.filter(p => p[field]).sort((a, b) => b[field + "_at"].localeCompare(a[field + "_at"]))[0]?.[field] || "";
+    const t = {
+      id: root, name: base.name, last: latest.last, status: latest.status, note: latest.note,
+      hours: Math.round(parts.reduce((s, p) => s + p.hours, 0) * 10) / 10,
+      tokens: parts.reduce((s, p) => s + p.tokens, 0),
+      days: [...new Set(parts.flatMap(p => p.days))],
+      projects: [...new Set(parts.flatMap(p => p.projects))],
+      sessions: parts.flatMap(p => p.sessions).sort((a, b) => b.last.localeCompare(a.last)),
+      merged: parts.filter(p => p.id !== root),
+      summary: by("summary"),
+      family: by("family"),
+      tickets: TRACK ? [...new Set(parts.flatMap(p => [...(p.tickets || []), ...(STATE.get(p.id)?.ticketsAdded || [])]))] : [],
+    };
+    t.age = Math.floor((now - new Date(t.last)) / DAY);
+    t.left = DATA.window_days - t.age;
+    const unlinked = new Set(parts.flatMap(p => STATE.get(p.id)?.ticketsRemoved || []));
+    const req = TRACK ? REQ.get(root) : null;
+    if (req?.status === "done" && req.ticket && !t.tickets.includes(req.ticket)) t.tickets.push(req.ticket);
+    t.tickets = t.tickets.filter(id => !unlinked.has(id));
+    // The tracker moves the card: it's only as far along as its least-advanced open ticket.
+    const known = t.tickets.map(id => ENTRIES[id]).filter(e => e && e.column in LABEL);
+    let changed = t.last;
+    if (known.length) {
+      const live = known.filter(e => e.column !== "dropped");
+      t.status = live.length ? live.reduce((a, b) => (RANK[b.column] < RANK[a.column] ? b : a)).column : "dropped";
+      t.fromTracker = true;
+      for (const e of known) if (e.updated && newer(e.updated, changed)) changed = e.updated;
+    }
+    const o = STATE.get(root);
+    const live = o && !newer(changed, o.at);
+    const noteLive = o && !newer(t.last, o.at);
+    t.auto = t.status;
+    t.status = live && o.status ? o.status : t.status;
+    t.removed = !!(live && o.removed);
+    t.noteEdited = !!(noteLive && typeof o.note === "string");
+    if (t.noteEdited) t.note = o.note;
+    t.moved = !!(live && o.status && o.status !== t.auto);
+    t.request = req || null;
+    t.untracked = TRACK && OPEN.has(t.status) && !t.tickets.length && req?.status !== "pending";
+    t.text = [t.name, t.note, t.summary, t.family, ...parts.map(p => p.name), ...t.tickets, ...t.projects, ...t.sessions.map(s => s.title)].join(" ").toLowerCase();
+    return t;
+  });
+}
+
+const prefs = { project: "all", hidden: ["shipped", "dropped"], showRemoved: false, range: DATA.window_days, group: false, untracked: false };
+try { Object.assign(prefs, JSON.parse(localStorage.getItem("wif-prefs") || "{}")); } catch {}
+if (!RANGES.some(([n]) => n === prefs.range)) prefs.range = DATA.window_days;
+const savePrefs = () => { try { localStorage.setItem("wif-prefs", JSON.stringify(prefs)); } catch {} };
+let query = "", editing = null, draft = "", addingFor = null, flashId = null;
+const expanded = new Set();
+const cutoff = () => windowDays[Math.max(0, DATA.window_days - prefs.range)];
+
+// Narrow a thread to the sessions inside the chosen range; null when it wasn't worked on then.
+function scope(t) {
+  if (prefs.range >= DATA.window_days) return t;
+  const from = cutoff();
+  const sessions = t.sessions.filter(x => dayKey(new Date(x.last)) >= from);
+  if (!sessions.length) return null;
+  return { ...t, sessions,
+    hours: Math.round(sessions.reduce((a, x) => a + (x.share_min || 0), 0) / 6) / 10,
+    tokens: sessions.reduce((a, x) => a + (x.share_tok || 0), 0) };
+}
+
+function ticketRow(t, isOpen) {
+  if (!TRACK) return "";
+  const edit = canWrite && isOpen;
+  const shown = isOpen ? t.tickets : t.tickets.slice(0, 3);
+  const chips = shown.map(id => {
+    const e = ENTRIES[id];
+    const tip = e ? `${id} · ${e.state}` : `${id} · status shows after the next /work-in-flight run`;
+    const href = linkFor(id);
+    const name = esc(e?.label || id);
+    return `<span class="tk" title="${esc(tip)}"><i class="sd" style="${e?.column in LABEL ? `--c:var(--${e.column})` : ""}"></i>` +
+      (href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${name}</a>` : `<span>${name}</span>`) +
+      (edit ? `<button class="tk-x" data-untick="${t.id}" data-tk="${esc(id)}" aria-label="Unlink ${esc(id)}">×</button>` : "") + `</span>`;
+  });
+  if (shown.length < t.tickets.length) chips.push(`<span class="tk muted" title="${esc(t.tickets.join(", "))}">+${t.tickets.length - shown.length}</span>`);
+  const r = t.request;
+  if (r?.status === "pending") chips.push(`<span class="tk muted" title="${r.via === "claude" ? "Sent to your open Claude session" : "Queued for the next /work-in-flight run"}">Ticket requested…</span>`);
+  if (r?.status === "failed") chips.push(`<span class="tk failed" title="${esc(r.message || "")}">Ticket not created</span>`);
+  if (edit) chips.push(addingFor === t.id
+    ? `<input class="tk-input" id="tk-add-${t.id}" data-tkinput="${t.id}" placeholder="ids or links ↵" autocomplete="off" aria-label="Link tickets">` +
+      (r?.status !== "pending" && t.status !== "dropped" && !t.removed
+        ? `<button class="tk-new" data-ticket="${t.id}" title="Have Claude write a new ticket for this">Create new</button>` : "")
+    : `<button class="tk-add" data-add-ticket="${t.id}" title="Link or create tickets" aria-label="Link or create tickets">+</button>`);
+  return chips.length ? `<div class="tickets">${chips.join("")}</div>` : "";
+}
+
+function card(t) {
+  const isOpen = expanded.has(t.id) || editing === t.id;
+  const open = OPEN.has(t.status);
+  const days = new Set(t.days);
+  const from = cutoff();
+  const strip = windowDays.map(d => `<i class="${days.has(d) ? "on" : ""}${d < from ? " out" : ""}"></i>`).join("");
+  const ago = t.age === 0 ? "today" : t.age === 1 ? "yesterday" : `${t.age}d ago`;
+  const o = open && !isOpen ? Math.max(0.5, 1 - t.age / DATA.window_days * 0.6) : 1;
+  const edit = canWrite && isOpen;
+  const note = editing === t.id
+    ? `<div class="editor"><textarea id="note-${t.id}" data-draft aria-label="Note for ${esc(t.name)}">${esc(draft)}</textarea>
+        <div><button class="chip" data-save="${t.id}">Save</button><button class="chip" data-cancel>Cancel</button>
+        ${t.noteEdited ? `<button class="chip" data-reset="${t.id}">Use Claude's note</button>` : ""}</div></div>`
+    : t.note || edit ? `<div class="note">${t.note ? esc(t.note) : `<span class="hint">Add a note</span>`}${edit
+      ? `<button class="icon-btn pen" data-edit="${t.id}" title="Edit note" aria-label="Edit note">${ICON.pen}</button>` : ""}</div>` : "";
+  const details = isOpen ? `
+    ${t.summary ? `<div class="summary">${esc(t.summary)}</div>` : ""}
+    ${ticketRow(t, true)}
+    ${t.merged.length ? `<div class="merged">Merged in: ${t.merged.map(p =>
+      `<span>${esc(p.name)}${canWrite ? ` <button data-unmerge="${p.id}" aria-label="Unmerge ${esc(p.name)}">undo</button>` : ""}</span>`).join(" · ")}</div>` : ""}
+    <div class="strip" title="Worked on, last ${DATA.window_days} days">${strip}</div>
+    <div class="meta"><span>${t.hours}h</span><span>${t.sessions.length} sess</span><span>${(t.tokens / 1000).toFixed(0)}k tok</span>
+      ${open ? `<span>fades in ${t.left}d</span>` : ""}
+      ${t.moved ? `<span class="pin" title="Moved by you; it was ${LABEL[t.auto]}">moved</span>` : ""}
+      ${t.noteEdited ? `<span class="pin">your note</span>` : ""}
+      ${t.fromTracker && !t.moved ? `<span class="pin" title="Column set by its tickets">via tickets</span>` : ""}</div>
+    ${canWrite ? `<div class="acts">
+      <span class="pill" style="--c:var(--${t.status})"><select data-move="${t.id}" aria-label="Status of ${esc(t.name)}">${COLS.map(([k, l]) =>
+        `<option value="${k}"${k === t.status ? " selected" : ""}>${l}</option>`).join("")}</select></span>
+      <label class="merge-field" title="Merge into another thread">${ICON.merge}<input id="merge-${t.id}" data-merge="${t.id}" list="merge-list"
+        placeholder="Merge into…" autocomplete="off" aria-label="Merge ${esc(t.name)} into another thread"></label></div>` : ""}
+    <div class="sess-h">Sessions</div>
+    <ul class="sess">${t.sessions.map(s => `<li><span>${fmtDate(s.last)}</span><span>${esc(s.title)}</span><span>${s.min}m</span></li>`).join("")}</ul>` : "";
+  return `<article class="card${isOpen ? " open" : ""}" data-id="${t.id}" aria-expanded="${isOpen}" draggable="${canWrite && !t.removed && editing !== t.id}" style="--o:${o.toFixed(2)};--c:var(--${t.status})">
+    ${t.family && !prefs.group ? `<span class="fam">${esc(t.family)}</span>` : ""}
+    <div class="top"><span class="n">${esc(t.name)}</span><span class="right">
+      <span class="ago${open && t.left <= 7 ? " warn" : ""}">${ago}</span>
+      ${edit ? `<button class="icon-btn" data-remove="${t.id}" title="${t.removed ? "Put back on the board" : "Remove from the board"}"
+        aria-label="${t.removed ? "Put back" : "Remove"} ${esc(t.name)}">${t.removed ? ICON.restore : ICON.trash}</button>` : ""}</span></div>
+    ${note}
+    ${!isOpen && t.untracked ? `<span class="untracked">untracked</span>` : ""}
+    ${!isOpen ? ticketRow(t, false) : ""}
+    ${details}
+  </article>`;
+}
+
+function column(items, key) {
+  const sorted = [...items].sort((a, b) => OPEN.has(key) ? a.left - b.left : b.last.localeCompare(a.last));
+  if (!prefs.group) return sorted.map(card).join("");
+  const fams = new Map();
+  for (const t of sorted) {
+    const f = t.family || "Other";
+    if (!fams.has(f)) fams.set(f, []);
+    fams.get(f).push(t);
+  }
+  return [...fams].sort(([a], [b]) => (a === "Other") - (b === "Other") || a.localeCompare(b))
+    .map(([f, ts]) => `<div class="famh">${esc(f)}</div>${ts.map(card).join("")}`).join("");
+}
+
+function sentence(all, scoped) {
+  const open = all.filter(t => !t.removed && OPEN.has(t.status));
+  const cold = open.filter(t => t.left <= 7).length;
+  const untracked = open.filter(t => t.untracked).length;
+  const worked = scoped.filter(t => !t.removed);
+  const hours = worked.reduce((s, t) => s + t.hours, 0);
+  const total = all.reduce((s, t) => s + t.hours, 0);
+  const when = { 1: "Today", 3: "In the last 3 days", 7: "This week", 14: "In the last 2 weeks" }[prefs.range] || `Over the last ${DATA.window_days} days`;
+  const first = worked.length
+    ? `${when} you worked on <b>${worked.length} ${worked.length === 1 ? "thing" : "things"}</b> for <b>${fmtH(hours)}</b>.`
+    : `${when === "Today" ? "Nothing worked on yet today" : `Nothing worked on ${when.toLowerCase()}`}.`;
+  const bits = [`<b>${open.length}</b> ${open.length === 1 ? "is" : "are"} still open`];
+  if (cold) bits.push(`<b class="cold">${cold} ${cold === 1 ? "is" : "are"} going cold</b>`);
+  if (untracked) bits.push(`<b>${untracked}</b> ${untracked === 1 ? "isn't" : "aren't"} tracked`);
+  const second = bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits.at(-1) : bits[0];
+  return `${first} ${second}.` + (prefs.range < DATA.window_days ? ` <b>${fmtH(total)}</b> over the last ${DATA.window_days} days.` : "");
+}
+
+function chart(list) {
+  const perDay = Object.fromEntries(windowDays.map(d => [d, 0]));
+  for (const t of list) for (const s of t.sessions) {
+    const d = dayKey(new Date(s.last));
+    if (d in perDay) perDay[d] += (s.share_min || 0) / 60;
+  }
+  const max = Math.max(1, ...Object.values(perDay));
+  const from = cutoff();
+  return `<div class="bars">${windowDays.map(d =>
+    `<i class="${d >= from ? "in" : ""}" style="height:${Math.max(3, perDay[d] / max * 100)}%" title="${fmtDate(d + "T12:00")} · ${perDay[d].toFixed(1)}h"></i>`).join("")}</div>
+    <div class="axis"><span>${fmtDate(windowDays[0] + "T12:00")}</span><span>hours worked per day · peak ${fmtH(max)}</span><span>today</span></div>`;
+}
+
+function render() {
+  const all = view();
+  const words = query.split(/\s+/).filter(Boolean);
+  const list = all.filter(t => (prefs.project === "all" || t.projects.includes(prefs.project)) && words.every(w => t.text.includes(w)));
+  const scoped = list.map(scope).filter(Boolean);
+  const shown = scoped.filter(t => !prefs.untracked || t.untracked);
+  const onBoard = shown.filter(t => !t.removed);
+  const removed = shown.filter(t => t.removed);
+
+  document.getElementById("sent").innerHTML = DATA.threads.length ? sentence(list, scoped)
+    : "Nothing sorted yet. Run <b>/work-in-flight</b> in Claude Code to turn your recent sessions into threads.";
+  document.getElementById("chart").innerHTML = chart(list);
+
+  const fading = list.filter(t => !t.removed && OPEN.has(t.status) && t.left <= 7).sort((a, b) => a.left - b.left);
+  const fad = document.getElementById("fading");
+  fad.hidden = !fading.length;
+  fad.innerHTML = `<h2>Going cold <span class="ct">${fading.length}</span></h2>` + fading.map(t =>
+    `<div class="frow"><span class="left">${t.left}d left</span><span class="n">${esc(t.name)}</span><span class="note">${esc(t.note)}</span></div>`).join("");
+
+  const cols = COLS.filter(([k]) => !prefs.hidden.includes(k));
+  document.getElementById("board").innerHTML = !DATA.threads.length ? `<div class="blank">Your threads appear here.</div>` : cols.map(([key, label]) => {
+    const items = onBoard.filter(t => t.status === key);
+    return `<div class="col"><h2><span class="dot" style="--c:var(--${key})"></span>${label} <span class="ct">${items.length}</span></h2>
+      <div class="drop" data-col="${key}">${column(items, key) || `<div class="empty">None</div>`}</div></div>`;
+  }).join("");
+
+  const done = onBoard.filter(t => t.status === "shipped").length, dropped = onBoard.filter(t => t.status === "dropped").length;
+  const foldedAway = prefs.hidden.includes("shipped") && prefs.hidden.includes("dropped");
+  const cl = document.getElementById("cleared");
+  cl.hidden = !(done + dropped);
+  const span = { 1: "today", 3: "in the last 3 days", 7: "this week", 14: "in the last 2 weeks" }[prefs.range] || `in the last ${DATA.window_days} days`;
+  cl.innerHTML = `<span>${done} done${dropped ? ` and ${dropped} dropped` : ""} ${span}</span>
+    <button data-cleared>${foldedAway ? "Show" : "Hide"}</button>`;
+
+  const rm = document.getElementById("removed");
+  rm.hidden = !prefs.showRemoved || !removed.length;
+  rm.innerHTML = `<h2>Removed from the board <span class="ct">${removed.length}</span></h2><div class="grid">${removed.map(card).join("")}</div>`;
+
+  document.getElementById("range").innerHTML = RANGES.map(([n, l]) => `<button data-range="${n}" aria-pressed="${n === prefs.range}">${l}</button>`).join("");
+  const untrackedCount = scoped.filter(t => t.untracked).length;
+  document.getElementById("untracked-slot").innerHTML = TRACK && (untrackedCount || prefs.untracked)
+    ? `<button class="chip" data-untracked aria-pressed="${prefs.untracked}">Untracked ${untrackedCount}</button>` : "";
+
+  const panel = document.getElementById("view");
+  if (!panel.hidden) renderPanel(all, onBoard, removed);
+  document.getElementById("merge-list").innerHTML = all.filter(x => !x.removed)
+    .sort((a, b) => a.name.localeCompare(b.name)).map(x => `<option value="${esc(x.name)}"></option>`).join("");
+
+  if (flashId) { document.querySelector(`.card[data-id="${flashId}"]`)?.classList.add("flash"); flashId = null; }
+  if (addingFor) document.getElementById("tk-add-" + addingFor)?.focus();
+  if (editing) {
+    const ta = document.getElementById("note-" + editing);
+    if (ta && document.activeElement !== ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }
+}
+
+const projects = [...new Set(DATA.threads.flatMap(t => t.projects))].sort();
+if (prefs.project !== "all" && !projects.includes(prefs.project)) prefs.project = "all";
+function renderPanel(all, onBoard, removed) {
+  const counts = Object.fromEntries(COLS.map(([k]) => [k, onBoard.filter(t => t.status === k).length]));
+  document.getElementById("view").innerHTML = `
+    <div class="row"><span>Columns</span><div class="chips">${COLS.map(([k, l]) =>
+      `<button class="chip" data-col-toggle="${k}" aria-pressed="${!prefs.hidden.includes(k)}"><span class="dot" style="--c:var(--${k})"></span>${l} ${counts[k]}</button>`).join("")}</div></div>
+    ${projects.length > 1 ? `<div class="row"><span>Project</span><div class="chips">${["all", ...projects].map(p =>
+      `<button class="chip" data-p="${esc(p)}" aria-pressed="${p === prefs.project}">${p === "all" ? "All" : esc(p)}</button>`).join("")}</div></div>` : ""}
+    <div class="row"><span>Layout</span><div class="chips">
+      <button class="chip" data-group aria-pressed="${prefs.group}">Group by family</button>
+      <button class="chip" data-show-removed aria-pressed="${prefs.showRemoved}">Removed cards ${removed.length}</button></div></div>`;
+}
+
+// ---- writes ---------------------------------------------------------------
+const nameOf = id => BY_SLUG.get(id)?.name || id;
+
+async function write(id, before, body, label) {
+  STATE.set(id, body);
+  render();
+  try {
+    await db.collection("state").doc(id).set(body);
+    if (label) toast(label, () => restore(id, before));
+  } catch (err) {
+    if (before) STATE.set(id, before); else STATE.delete(id);
+    if (err?.code === "invalid_argument") canWrite = false;
+    render();
+    toast("That change didn't save. Reload the page and try again.", null, true);
+  }
+}
+
+async function restore(id, before) {
+  if (before) STATE.set(id, before); else STATE.delete(id);
+  render();
+  try {
+    const ref = db.collection("state").doc(id);
+    await (before ? ref.set(before) : ref.delete());
+  } catch {
+    toast("Undo didn't save. Reload the page and try again.", null, true);
+  }
+}
+
+// A move, removal or note: pins the card as you left it until something newer happens.
+async function save(id, patch, label) {
+  if (!db) return;
+  const t = view().find(x => x.id === id) || BY_SLUG.get(id);
+  const before = STATE.get(id);
+  await write(id, before, {
+    name: nameOf(id), at: new Date().toISOString(), status: t.status, removed: !!t.removed,
+    note: t.noteEdited ? t.note : null, mergedInto: before?.mergedInto ?? null,
+    ticketsAdded: before?.ticketsAdded ?? [], ticketsRemoved: before?.ticketsRemoved ?? [], ...patch,
+  }, label);
+}
+
+// Links and merges: permanent, written without touching the pin time.
+async function patchState(id, patch, label) {
+  if (!db) return;
+  const before = STATE.get(id);
+  await write(id, before, { ...(before || { name: nameOf(id) }), ...patch }, label);
+}
+
+async function requestTicket(id, el) {
+  const t = view().find(x => x.id === id);
+  if (!t || !db) return;
+  let via = "queue";
+  try {
+    if (comments && (await comments.canSendToClaude()) === "available") {
+      const anchor = await comments.anchorFor(el.closest(".card"));
+      await comments.sendToClaude({ anchor, text:
+        `Work in Flight ticket request: create a ${DATA.tracker.kind} ticket for the thread "${t.name}" (board request requests/${id}). Follow the work-in-flight skill's ticket request steps.` });
+      via = "claude";
+    }
+  } catch {}
+  const before = REQ.get(id);
+  const body = { name: t.name, status: "pending", via, at: new Date().toISOString() };
+  REQ.set(id, body);
+  render();
+  try {
+    await db.collection("requests").doc(id).set(body);
+    toast(via === "claude" ? `Ticket requested for ${t.name}. Claude is on it.` : `Ticket requested for ${t.name}. Queued for the next /work-in-flight run.`);
+  } catch {
+    if (before) REQ.set(id, before); else REQ.delete(id);
+    render();
+    toast("The ticket request didn't save. Reload the page and try again.", null, true);
+  }
+}
+
+const toastBox = document.createElement("div");
+toastBox.className = "toasts";
+toastBox.setAttribute("aria-live", "polite");
+document.body.append(toastBox);
+function toast(message, undo, error) {
+  const el = document.createElement("div");
+  el.className = "toast" + (error ? " error" : "");
+  const text = document.createElement("span");
+  text.textContent = message;
+  el.append(text);
+  let timer;
+  const dismiss = () => { clearTimeout(timer); el.classList.add("out"); setTimeout(() => el.remove(), 180); };
+  const start = () => { timer = setTimeout(dismiss, undo ? 6000 : 4000); };
+  if (undo) {
+    const b = document.createElement("button");
+    b.textContent = "Undo";
+    b.addEventListener("click", () => { dismiss(); undo(); });
+    el.append(b);
+  }
+  el.addEventListener("mouseenter", () => clearTimeout(timer));
+  el.addEventListener("mouseleave", start);
+  toastBox.append(el);
+  while (toastBox.children.length > 3) toastBox.firstElementChild.remove();
+  start();
+}
+
+// ---- events ---------------------------------------------------------------
+const wrap = document.querySelector(".wrap");
+const panel = document.getElementById("view");
+const viewBtn = document.getElementById("view-btn");
+function togglePanel(open) {
+  panel.hidden = !open;
+  viewBtn.setAttribute("aria-expanded", open);
+  render();
+}
+document.addEventListener("click", ev => {
+  if (!panel.hidden && !ev.target.closest("#view, #view-btn")) togglePanel(false);
+});
+
+wrap.addEventListener("click", ev => {
+  const el = ev.target.closest("button");
+  if (!el) {
+    const c = ev.target.closest(".card");
+    if (c && !ev.target.closest("select, textarea, input, label, a") && !getSelection().toString()) {
+      expanded.has(c.dataset.id) ? expanded.delete(c.dataset.id) : expanded.add(c.dataset.id);
+      render();
+    }
+    return;
+  }
+  const d = el.dataset;
+  if (el === viewBtn) togglePanel(panel.hidden);
+  else if (d.untick) {
+    const o = STATE.get(d.untick) || {};
+    patchState(d.untick, {
+      ticketsRemoved: [...new Set([...(o.ticketsRemoved || []), d.tk])],
+      ticketsAdded: (o.ticketsAdded || []).filter(x => x !== d.tk),
+    }, `Unlinked ${d.tk} from ${nameOf(d.untick)}`);
+  } else if (d.addTicket) { addingFor = d.addTicket; render(); }
+  else if (d.ticket) { addingFor = null; requestTicket(d.ticket, el); }
+  else if (d.remove) {
+    const t = view().find(x => x.id === d.remove);
+    save(d.remove, { removed: !t.removed }, t.removed ? `Put ${t.name} back on the board` : `Removed ${t.name}`);
+  } else if (d.edit) { editing = d.edit; draft = view().find(x => x.id === d.edit).note || ""; render(); }
+  else if (d.save) { editing = null; save(d.save, { note: draft.trim() }, `Note saved on ${nameOf(d.save)}`); }
+  else if (d.reset) { editing = null; save(d.reset, { note: null }, `Back to Claude's note on ${nameOf(d.reset)}`); }
+  else if ("cancel" in d) { editing = null; render(); }
+  else if (d.unmerge) patchState(d.unmerge, { mergedInto: null }, `Unmerged ${nameOf(d.unmerge)}`);
+  else if (d.range) { prefs.range = Number(d.range); savePrefs(); render(); }
+  else if ("untracked" in d) { prefs.untracked = !prefs.untracked; savePrefs(); render(); }
+  else if ("cleared" in d) {
+    const folded = prefs.hidden.includes("shipped") && prefs.hidden.includes("dropped");
+    prefs.hidden = folded ? prefs.hidden.filter(k => k !== "shipped" && k !== "dropped") : [...new Set([...prefs.hidden, "shipped", "dropped"])];
+    savePrefs(); render();
+  } else if (d.colToggle) {
+    prefs.hidden = prefs.hidden.includes(d.colToggle) ? prefs.hidden.filter(x => x !== d.colToggle) : [...prefs.hidden, d.colToggle];
+    savePrefs(); render();
+  } else if (d.p) { prefs.project = d.p; savePrefs(); render(); }
+  else if ("group" in d) { prefs.group = !prefs.group; savePrefs(); render(); }
+  else if ("showRemoved" in d) { prefs.showRemoved = !prefs.showRemoved; savePrefs(); render(); }
+});
+wrap.addEventListener("change", ev => {
+  const d = ev.target.dataset;
+  if (d.move) save(d.move, { status: ev.target.value, removed: false }, `Moved ${nameOf(d.move)} to ${LABEL[ev.target.value]}`);
+  else if (d.merge) {
+    const name = ev.target.value.trim().toLowerCase();
+    const target = view().find(x => x.name.toLowerCase() === name && x.id !== d.merge && !x.removed);
+    if (target) {
+      flashId = target.id;
+      expanded.delete(d.merge);
+      patchState(d.merge, { mergedInto: target.id }, `Merged ${nameOf(d.merge)} into ${target.name}`);
+    }
+  }
+});
+wrap.addEventListener("input", ev => { if ("draft" in ev.target.dataset) draft = ev.target.value; });
+wrap.addEventListener("keydown", ev => {
+  const tkFor = ev.target.dataset.tkinput;
+  if (tkFor) {
+    if (ev.key === "Escape") { addingFor = null; render(); }
+    if (ev.key === "Enter") {
+      const text = ["linear", "jira"].includes(DATA.tracker.kind) ? ev.target.value.toUpperCase() : ev.target.value;
+      // Asana has no short keys: take the task number from each pasted link or id.
+      const ids = [...new Set(DATA.tracker.kind === "asana"
+        ? text.split(/[\s,]+/).map(x => (x.match(/\d{10,}/g) || []).at(-1)).filter(Boolean)
+        : text.match(ID_RE) || [])];
+      addingFor = null;
+      if (!ids.length) { render(); return; }
+      const o = STATE.get(tkFor) || {};
+      patchState(tkFor, {
+        ticketsAdded: [...new Set([...(o.ticketsAdded || []), ...ids])],
+        ticketsRemoved: (o.ticketsRemoved || []).filter(x => !ids.includes(x)),
+      }, `Linked ${ids.join(", ")} to ${nameOf(tkFor)}`);
+    }
+    return;
+  }
+  if (!("draft" in ev.target.dataset)) return;
+  if (ev.key === "Escape") { editing = null; render(); }
+  if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) { const id = editing; editing = null; save(id, { note: draft.trim() }, `Note saved on ${nameOf(id)}`); }
+});
+
+const HOLD = 1500;
+document.documentElement.style.setProperty("--hold", HOLD + "ms");
+let dragId = null, hoverId = null, armed = false, holdTimer = null;
+const board = document.getElementById("board");
+const cardEl = id => board.querySelector(`.card[data-id="${id}"]`);
+function clearHover() {
+  clearTimeout(holdTimer);
+  if (hoverId) cardEl(hoverId)?.classList.remove("hold", "armed");
+  hoverId = null;
+  armed = false;
+}
+function endDrag() {
+  clearHover();
+  dragId = null;
+  board.querySelectorAll(".dragging, .over").forEach(x => x.classList.remove("dragging", "over"));
+}
+board.addEventListener("dragstart", ev => {
+  const c = ev.target.closest(".card");
+  if (!c) return;
+  dragId = c.dataset.id;
+  ev.dataTransfer.effectAllowed = "move";
+  ev.dataTransfer.setData("text/plain", dragId);
+  requestAnimationFrame(() => c.classList.add("dragging"));
+});
+board.addEventListener("dragend", endDrag);
+board.addEventListener("dragover", ev => {
+  const d = ev.target.closest(".drop");
+  if (!d || !dragId) return;
+  ev.preventDefault();
+  const c = ev.target.closest(".card");
+  const overId = c && c.dataset.id !== dragId ? c.dataset.id : null;
+  if (overId !== hoverId) {
+    clearHover();
+    hoverId = overId;
+    if (overId) {
+      c.classList.add("hold");
+      holdTimer = setTimeout(() => {
+        armed = true;
+        const el = cardEl(overId);
+        el?.classList.remove("hold");
+        el?.classList.add("armed");
+        board.querySelectorAll(".over").forEach(x => x.classList.remove("over"));
+      }, HOLD);
+    }
+  }
+  ev.dataTransfer.dropEffect = armed ? "link" : "move";
+  board.querySelectorAll(".over").forEach(x => x !== d && x.classList.remove("over"));
+  d.classList.toggle("over", !armed);
+});
+board.addEventListener("drop", ev => {
+  const d = ev.target.closest(".drop");
+  if (!d || !dragId) return;
+  ev.preventDefault();
+  const id = dragId, target = armed ? hoverId : null;
+  endDrag();
+  const t = view().find(x => x.id === id);
+  if (target) {
+    flashId = target;
+    expanded.delete(id);
+    patchState(id, { mergedInto: target }, `Merged ${nameOf(id)} into ${nameOf(target)}`);
+  } else if (t && t.status !== d.dataset.col) {
+    flashId = id;
+    save(id, { status: d.dataset.col, removed: false }, `Moved ${nameOf(id)} to ${LABEL[d.dataset.col]}`);
+  } else render();
+});
+
+let searchTimer;
+document.getElementById("q").addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { query = e.target.value.trim().toLowerCase(); render(); }, 80);
+});
+const foot = document.getElementById("foot");
+const baseFoot = `${DATA.session_count} sessions read, updated ${fmtDate(DATA.generated)}` +
+  (DATA.unlabeled ? `, ${DATA.unlabeled} not yet sorted into threads` : "") +
+  `. Cards fade as they age and drop off after ${DATA.window_days} days untouched.`;
+foot.textContent = baseFoot;
+render();
+
+(async () => {
+  db = await window.claude?.use?.("db");
+  if (!db) { foot.textContent = baseFoot + " This view is read-only."; return; }
+  const user = await window.claude.use("user");
+  canWrite = (await user?.can("data.write")) !== false;
+  comments = await window.claude.use("comments");
+  const timer = setTimeout(() => { foot.textContent = baseFoot + " Your saved changes can't be reached right now."; }, 10000);
+  db.collection("requests").onSnapshot(snap => {
+    REQ.clear();
+    for (const d of snap.docs) REQ.set(d.id, d.data());
+    render();
+  }, () => {});
+  db.collection("state").onSnapshot(snap => {
+    if (!snap.metadata.fromCache) { clearTimeout(timer); foot.textContent = baseFoot; }
+    STATE.clear();
+    for (const d of snap.docs) STATE.set(d.id, d.data());
+    render();
+  }, () => { clearTimeout(timer); foot.textContent = baseFoot + " Your saved changes couldn't load."; });
+  render();
+})();
+</script>

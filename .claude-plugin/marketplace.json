@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "work-in-flight",
+  "description": "A board of everything you've been working on across Claude Code sessions.",
+  "owner": {
+    "name": "Jesse English"
+  },
+  "plugins": [
+    {
+      "name": "work-in-flight",
+      "description": "Sorts your Claude Code sessions into threads on a private board: hours worked, what's going cold, what's linked and what's tracked.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
