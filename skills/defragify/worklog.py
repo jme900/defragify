@@ -1,12 +1,14 @@
 """defragify: what you've been working on across Claude Code sessions, as threads on a board.
 
-python worklog.py config            print the effective config
-python worklog.py digest            sessions not yet labeled (or continued since), as JSON
-python worklog.py label FILE        merge {session_id: [{thread, status, note, summary, family, tickets}]} into the cache
-python worklog.py board OUT.html    render the board from labels, tracker statuses and session stats
-python worklog.py context NAME...   everything recorded for the named threads' sessions, for writing a ticket
+python worklog.py config                 print the effective config
+python worklog.py digest OUT.json        sessions not yet labeled (or continued since)
+python worklog.py label FILE             merge {session_id: [{thread, status, note, summary, family, tickets}]} into the cache
+python worklog.py board OUT.html         render the board from labels, tracker statuses and session stats
+python worklog.py context OUT.json NAME...  everything recorded for the named threads' sessions, for writing a ticket
 
-DEFRAGIFY_HOME (default ~/.claude/defragify) and DEFRAGIFY_PROJECTS (default ~/.claude/projects) override the folders.
+Results go to files, never stdout redirection, so the commands behave the same in bash, zsh and PowerShell.
+Folders: CLAUDE_CONFIG_DIR (default ~/.claude) holds projects/ and defragify/; DEFRAGIFY_HOME and
+DEFRAGIFY_PROJECTS override each one.
 """
 
 import json
@@ -15,15 +17,18 @@ import re
 import subprocess
 import sys
 from collections import defaultdict
-from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from functools import cache
 from pathlib import Path
 
+# Spelled out on purpose: datetime.UTC needs Python 3.11 and this runs on 3.9+.
+UTC = timezone(timedelta(0))
 IDLE = timedelta(minutes=5)
-HOME = Path(os.environ.get("DEFRAGIFY_HOME") or Path.home() / ".claude" / "defragify")
-PROJECTS = Path(os.environ.get("DEFRAGIFY_PROJECTS") or Path.home() / ".claude" / "projects")
+CLAUDE_DIR = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude").expanduser()
+HOME = Path(os.environ.get("DEFRAGIFY_HOME") or CLAUDE_DIR / "defragify").expanduser()
+PROJECTS = Path(os.environ.get("DEFRAGIFY_PROJECTS") or CLAUDE_DIR / "projects").expanduser()
 CONFIG = HOME / "config.json"
 LABELS = HOME / "labels.json"
 TRACKER = HOME / "tracker.json"
@@ -40,7 +45,7 @@ ID_PATTERNS = {
 
 @cache
 def config():
-    cfg = json.loads(CONFIG.read_text(encoding="utf-8")) if CONFIG.exists() else {}
+    cfg = load(CONFIG, {})
     tracker = {"kind": "none", **cfg.get("tracker", {})}
     tracker.setdefault("id_pattern", ID_PATTERNS.get(tracker["kind"], ID_PATTERNS["none"]))
     return {
@@ -66,9 +71,10 @@ def in_scope(cwd):
             return True
     if not scope["github_orgs"]:
         return False
+    # safe.directory: read-only lookup; repos owned by another account (WSL, shared drives) are fine.
     try:
         url = subprocess.run(
-            ["git", "-C", cwd, "remote", "get-url", "origin"], capture_output=True, text=True, timeout=10
+            ["git", "-c", "safe.directory=*", "-C", cwd, "remote", "get-url", "origin"], capture_output=True, text=True, timeout=10
         ).stdout
     except (OSError, subprocess.TimeoutExpired):
         return False
@@ -76,7 +82,12 @@ def in_scope(cwd):
 
 
 def load(path, default):
-    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else default
+    # utf-8-sig: Windows PowerShell saves files with a byte-order mark.
+    return json.loads(Path(path).read_text(encoding="utf-8-sig")) if Path(path).exists() else default
+
+
+def save(path, data):
+    Path(path).write_text(json.dumps(data, indent=1), encoding="utf-8", newline="\n")
 
 
 def prompt_text(d):
@@ -160,7 +171,7 @@ def sessions():
             yield s
 
 
-def digest():
+def digest(out):
     labels = load(LABELS, {})
     ticket_id = re.compile(config()["tracker"]["id_pattern"])
     todo = []
@@ -182,11 +193,12 @@ def digest():
             for field in ("summary", "family"):
                 if t.get(field):
                     k[field] = t[field]
-    print(json.dumps({"known_threads": known, "sessions": sorted(todo, key=lambda s: s["start"])}, indent=1))
+    save(out, {"known_threads": known, "sessions": sorted(todo, key=lambda s: s["start"])})
+    print(f"{len(todo)} sessions to label, {len(known)} known threads -> {out}")
 
 
 def label(file):
-    new = json.loads(Path(file).read_text(encoding="utf-8"))
+    new = load(file, {})
     labels = load(LABELS, {})
     now = datetime.now(UTC)
     for sid, threads in new.items():
@@ -197,7 +209,7 @@ def label(file):
     cutoff = (now - timedelta(days=config()["window_days"] + 5)).isoformat()
     labels = {k: v for k, v in labels.items() if v["labeled_at"] >= cutoff}
     HOME.mkdir(parents=True, exist_ok=True)
-    LABELS.write_text(json.dumps(labels, indent=1), encoding="utf-8", newline="\n")
+    save(LABELS, labels)
     print(f"{len(new)} sessions labeled, {len(labels)} in cache")
 
 
@@ -267,15 +279,16 @@ def board(out):
     print(f"{len(rows)} threads, {count} sessions ({unlabeled} unlabeled) -> {out}")
 
 
-def context(names):
+def context(out_file, names):
     labels = load(LABELS, {})
     wanted = {n.lower() for n in names}
-    out = []
+    found = []
     for s in sessions():
         match = [t for t in (labels.get(s["id"]) or {}).get("threads", []) if t["thread"].lower() in wanted]
         if match:
-            out.append({**s, "labels": match, "prompts": [x[:1500] for x in s["prompts"]]})
-    print(json.dumps(sorted(out, key=lambda s: s["start"]), indent=1))
+            found.append({**s, "labels": match, "prompts": [x[:1500] for x in s["prompts"]]})
+    save(out_file, sorted(found, key=lambda s: s["start"]))
+    print(f"{len(found)} sessions -> {out_file}")
 
 
 if __name__ == "__main__":
@@ -283,12 +296,12 @@ if __name__ == "__main__":
     if cmd == "config":
         print(json.dumps({**config(), "home": str(HOME), "exists": CONFIG.exists()}, indent=1))
     elif cmd == "digest":
-        digest()
+        digest(sys.argv[2])
     elif cmd == "label":
         label(sys.argv[2])
     elif cmd == "board":
         board(sys.argv[2])
     elif cmd == "context":
-        context(sys.argv[2:])
+        context(sys.argv[2], sys.argv[3:])
     else:
         sys.exit(__doc__)

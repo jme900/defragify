@@ -9,15 +9,15 @@ import shutil
 import subprocess
 import sys
 import uuid
-from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "out"
 SKILL = ROOT.parent / "skills" / "defragify" / "worklog.py"
-NOW = datetime.now(UTC).replace(second=0, microsecond=0)
+NOW = datetime.now(timezone(timedelta(0))).replace(second=0, microsecond=0)  # not datetime.UTC: needs Python 3.11
 
 # name, family, status, note, summary, tickets [(id, state, column)], sessions [(days_ago, minutes, repo, title)]
 THREADS = [

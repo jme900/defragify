@@ -1,6 +1,34 @@
-# defragify
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/logo-light.svg">
+    <img alt="defragify logo: scattered green pixels defragment into a pixel-art brain" src="docs/logo-light.svg" width="220">
+  </picture>
+</p>
 
-Defragment your brain. A board of everything you've been working on with Claude Code, built from your own sessions.
+<h1 align="center">defragify</h1>
+
+<p align="center">
+  <b>Defragment your brain.</b><br>
+  A board of everything you've been working on with Claude Code, built from your own sessions.
+</p>
+
+<p align="center">
+  <a href="#install"><img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude_Code-plugin-D97757"></a>
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-2f8a55"></a>
+  <img alt="Python 3.9 or newer" src="https://img.shields.io/badge/python-3.9%2B-3776AB">
+  <img alt="Runs on macOS, Linux and Windows" src="https://img.shields.io/badge/macOS_%7C_Linux_%7C_Windows-supported-555">
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#what-it-shows">What it shows</a> ·
+  <a href="#using-the-board">Using the board</a> ·
+  <a href="#trackers">Trackers</a> ·
+  <a href="#what-it-reads-and-where-it-goes">Privacy</a>
+</p>
+
+---
 
 With Claude you can run ten sessions across three repos and chase a dozen ideas in a week. Most of that is fine to forget. Some of it isn't, and it gets lost in the clutter: the idea you'd half-explored, the fix waiting on a review, the feature that was never ticketed. defragify reads your recent sessions, sorts them into threads, and keeps them on one private board called Work in Flight, so you can see where you're at and let the rest go.
 
@@ -42,13 +70,28 @@ claude plugin marketplace add jme900/defragify
 claude plugin install defragify@defragify
 ```
 
-If `claude` isn't on your PATH, the extension bundles it. On Windows it's under `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<version>-win32-x64\resources\native-binary\claude.exe`. Start a new session or reload the window afterwards so the skill loads.
+If `claude` isn't on your PATH, the extension bundles it in `resources/native-binary/` inside its folder, named `claude` on macOS and Linux and `claude.exe` on Windows:
 
-**Had it as work-in-flight?** That was this plugin's old name. Remove the old one, install as above, and rename your `~/.claude/work-in-flight` folder to `~/.claude/defragify` to keep your board, settings and labels:
+- macOS and Linux: `~/.vscode/extensions/anthropic.claude-code-<version>-<platform>/resources/native-binary/claude`
+- Windows: `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<version>-win32-x64\resources\native-binary\claude.exe`
+
+(Cursor and other VS Code forks keep extensions in their own folder, such as `~/.cursor/extensions`.) Start a new session or reload the window afterwards so the skill loads.
+
+**Had it as work-in-flight?** That was this plugin's old name. Remove the old one and install as above:
 
 ```
 claude plugin uninstall work-in-flight@work-in-flight
 claude plugin marketplace remove work-in-flight
+```
+
+Then rename your old data folder to keep your board, settings and labels:
+
+```
+# macOS, Linux, Git Bash
+mv ~/.claude/work-in-flight ~/.claude/defragify
+
+# Windows PowerShell
+Rename-Item "$HOME\.claude\work-in-flight" defragify
 ```
 
 Then run `/defragify`. The first run asks four questions: which sessions count, which tracker you use, how new tickets should be written, and how many days to keep. It then sorts your sessions and publishes your board as a private artifact on claude.ai. Run it again whenever you want the board brought up to date.
@@ -92,12 +135,13 @@ Each tracker's details are in [`skills/defragify/trackers/`](skills/defragify/tr
 - It reads Claude Code's session transcripts in `~/.claude/projects/` on your machine. They hold your prompts and Claude's tool calls.
 - Claude labels new sessions in your own Claude Code session, the same way it works on anything else you ask.
 - Your settings and labels stay in `~/.claude/defragify/`.
+- `~/.claude` is `%USERPROFILE%\.claude` on Windows. If you've moved it with `CLAUDE_CONFIG_DIR`, defragify follows.
 - The board is a private artifact in your claude.ai account. It holds thread names, notes, summaries and session titles, not your code.
 
 ## Requirements and limits
 
 - Claude Code signed in with a claude.ai account, which publishing artifacts needs. API-key-only setups can't publish the board.
-- Python 3.9 or newer, standard library only.
+- macOS, Linux or Windows, with Python 3.9 or newer (standard library only). Claude finds it as `python3`, `python` or the Windows `py` launcher, and offers to install it if it's missing.
 - Claude Code deletes transcripts after 30 days by default (`cleanupPeriodDays`), so the board can't look back further than that unless you raise it.
 - The transcript format isn't documented and could change in a Claude Code release. All the parsing lives in one function, `scan()` in `worklog.py`, so a fix is small.
 
