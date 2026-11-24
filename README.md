@@ -25,6 +25,15 @@ In Claude Code:
 /plugin install work-in-flight@work-in-flight
 ```
 
+In the VS Code extension, where `/plugin` isn't available, run the same two steps in a terminal:
+
+```
+claude plugin marketplace add jme900/work-in-flight
+claude plugin install work-in-flight@work-in-flight
+```
+
+If `claude` isn't on your PATH, the extension bundles it. On Windows it's under `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<version>-win32-x64\resources\native-binary\claude.exe`. Start a new session or reload the window afterwards so the skill loads.
+
 Then run `/work-in-flight`. The first run asks four questions: which sessions count, which tracker you use, how new tickets should be written, and how many days to keep. It then sorts your sessions and publishes your board as a private artifact on claude.ai. Run it again whenever you want the board brought up to date.
 
 ## Using the board
