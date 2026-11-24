@@ -8,6 +8,16 @@ With Claude you can run ten sessions across three repos and chase a dozen ideas 
 
 *Made-up demo data.*
 
+## Quick start
+
+No coding needed. In Claude Code:
+
+1. Type `/plugin marketplace add jme900/work-in-flight` and press Enter.
+2. Type `/plugin install work-in-flight@work-in-flight` and press Enter. (Using Claude Code inside VS Code? See [Install](#install) below.)
+3. Start a new session and type `/work-in-flight`. Answer four quick questions, and Claude builds your board and gives you the link.
+
+The first run reads up to a month of your sessions, so give it a few minutes. If you don't have Python, Claude will say so and offer to install it. After that, run `/work-in-flight` whenever you want the board brought up to date.
+
 ## What it shows
 
 - **Where your time went.** One sentence up top says what you worked on and for how long ("This week you worked on 9 things for 14.2h"), with a bar chart of hours worked per day. Hours are active time: gaps of more than five minutes don't count.

@@ -17,9 +17,13 @@ Board database (the board artifact's db, read and written with the artifact data
 - `requests/<slug>`: ticket requests from the board, `{name, status: pending|done|failed, via, ticket, message, at}`. You write these when you handle one.
 - `<slug>` is the thread name lowercased, runs of non-alphanumerics turned into `-`, trimmed of `-`.
 
+## Before anything: Python
+
+The script needs Python 3.9 or newer. Check with `python3 --version` (then `python --version`). On Windows, a `python3` that opens the Microsoft Store or prints nothing means Python isn't really installed. If neither works, don't show the raw error: tell the person in one plain sentence that this needs Python, a free one-time install, and offer to install it for them (`winget install Python.Python.3.12` on Windows, `brew install python` on a Mac with Homebrew, otherwise point them to python.org). Install only once they say yes, then carry on.
+
 ## First run: setup
 
-If `config` says the file doesn't exist, ask these four questions in one round (use the ask-user tool where there is one), then write `<home>/config.json`:
+Many people running this don't write code, so ask in everyday words, never in config terms ("Should this count every project you've worked on, or only some folders?", not "scope" or "GitHub orgs"). If `config` says the file doesn't exist, ask these four questions in one round (use the ask-user tool where there is one), then write `<home>/config.json`:
 
 1. **Which sessions count?** Every repo (default), only repos under certain GitHub orgs, or only certain folders. Maps to `scope.github_orgs` / `scope.paths`; both empty means everything.
 2. **Issue tracker?** Linear, GitHub Issues, Jira, Asana, or none. Maps to `tracker.kind`. For anything but none, read `trackers/<kind>.md` and fill in what it says (link pattern, where new tickets go). Check the connector or CLI it needs is available and say so if not.
@@ -56,7 +60,8 @@ If `config` says the file doesn't exist, ask these four questions in one round (
    - **family**: the larger effort this thread belongs to ("Checkout revamp", "Research"). Reuse existing family names; a handful per board, not one per thread.
    - **tickets**: ids from the configured tracker that this session actually worked on or created for the thread, in the tracker's id format. Leave out passing mentions. Empty for tracker none.
    - Quick questions and machine setup go in one "Setup & admin" thread as `shipped`. A session touching two threads gets two entries.
-3. `python3 "<skill dir>/worklog.py" label <scratch>/labels.json`
+   **Work in batches.** A first run can find hundreds of sessions. Never read the whole digest at once: take about 30 sessions at a time (oldest first), label them, and run step 3 for that batch before reading the next. Each saved batch drops out of the next `digest`, so an interrupted run picks up where it stopped. Tell the person how many sessions there are and that the first run takes a while; later runs only see what's new.
+3. `python3 "<skill dir>/worklog.py" label <scratch>/labels.json` (once per batch)
 4. If the tracker isn't none: handle every `requests` doc still `pending` (see Ticket requests), then refresh statuses as `trackers/<kind>.md` describes and write `<home>/tracker.json`:
    `{"<id>": {"state": "<status name>", "column": "idea|building|waiting|shipped|dropped", "updated": "<ISO time>", "url": "<optional>", "label": "<optional short name>"}}`
    for every linked ticket: every label `tickets` entry, every `state` doc's `ticketsAdded`, every `done` request's `ticket`. Map `state` to `column` with the tracker page's defaults plus `tracker.columns`. The board moves each card to its least-advanced open ticket (dropped ones ignored), so this file keeps cards in step with the tracker.
