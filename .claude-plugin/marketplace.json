@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "defragify",
-  "description": "Defragment your brain: a board of everything you've been working on across Claude Code sessions.",
+  "description": "Defragment your brain: a board of everything you've been working on across your AI coding sessions and hand-coding.",
   "owner": {
     "name": "Jesse English"
   },
   "plugins": [
     {
       "name": "defragify",
-      "description": "Sorts your Claude Code sessions into threads on a private board: hours worked, what's going cold, what's linked and what's tracked.",
+      "description": "Sorts your AI coding sessions and hand-coding into threads on a private board: hours worked, what's going cold, what's linked and what's tracked.",
       "source": "./",
       "category": "productivity"
     }

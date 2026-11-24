@@ -10,7 +10,7 @@
 
 <p align="center">
   <b>Defragment your brain.</b><br>
-  A board of everything you've been working on with Claude Code, built from your own sessions.
+  A board of everything you've been working on with Claude Code, Codex, Cursor and friends, plus what you coded by hand.
 </p>
 
 <p align="center">
@@ -112,7 +112,8 @@ Each tracker's details are in [`skills/defragify/trackers/`](skills/defragify/tr
 
 ## What it reads and where it goes
 
-- It reads Claude Code's session transcripts in `~/.claude/projects/` on your machine. They hold your prompts and Claude's tool calls.
+- It reads the session history each AI tool keeps on your machine, wherever it finds one: Claude Code (`~/.claude/projects/`), Codex (`~/.codex/sessions/`), Cursor chats, GitHub Copilot chats in VS Code and its forks, and Antigravity's conversation index (its transcripts are encrypted, so only titles, times and task summaries).
+- It also counts coding you did by hand: file saves from VS Code-family editors' local history and your own git commits, when no AI session was running. These show up as `manual` sessions, one per repo per day.
 - Claude labels new sessions in your own Claude Code session, the same way it works on anything else you ask.
 - Your settings and labels stay in `~/.claude/defragify/`.
 - `~/.claude` is `%USERPROFILE%\.claude` on Windows. If you've moved it with `CLAUDE_CONFIG_DIR`, defragify follows.
@@ -123,7 +124,8 @@ Each tracker's details are in [`skills/defragify/trackers/`](skills/defragify/tr
 - Claude Code signed in with a claude.ai account, which publishing artifacts needs. API-key-only setups can't publish the board.
 - macOS, Linux or Windows, with Python 3.9 or newer (standard library only). Claude finds it as `python3`, `python` or the Windows `py` launcher, and offers to install it if it's missing.
 - Claude Code deletes transcripts after 30 days by default (`cleanupPeriodDays`), so the board can't look back further than that unless you raise it.
-- The transcript format isn't documented and could change in a Claude Code release. All the parsing lives in one function, `scan()` in `worklog.py`, so a fix is small.
+- None of these formats are documented and any could change in a release. Each tool has its own `read_*()` function in `worklog.py`; one that breaks is skipped with a warning, so the rest still build the board, and a fix is small.
+- Hand-coding time comes from saves and commits, so it's a floor: time spent reading or thinking between saves isn't counted, and edits made while an AI session is running count toward that session.
 
 ## License
 

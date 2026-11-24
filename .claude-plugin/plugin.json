@@ -1,7 +1,7 @@
 {
   "name": "defragify",
-  "version": "2.1.1",
-  "description": "Defragment your brain: sorts your Claude Code sessions into threads on one private board, with hours worked, what's going cold, what's linked and what's tracked.",
+  "version": "2.2.0",
+  "description": "Defragment your brain: sorts your AI coding sessions and hand-coding into threads on one private board, with hours worked, what's going cold, what's linked and what's tracked.",
   "author": {
     "name": "Jesse English"
   }

@@ -1,11 +1,11 @@
 ---
 name: defragify
-description: Defragments your brain. A board of everything you've been working on across Claude Code sessions. Sorts the last 30 days of sessions into threads (features, ideas, fixes, research), groups related threads into families, shows hours worked, what's going cold, and what is or isn't tracked in your issue tracker (Linear, GitHub Issues, Jira, Asana or none), and publishes it as a private board artifact you can rearrange. Use for "/defragify", "defragify", "what am I working on", "what's in flight", "what's going cold", "update my board", "how long have I spent on X", and when a board comment asks for a ticket.
+description: Defragments your brain. A board of everything you've been working on across AI coding sessions (Claude Code, Codex, Cursor, Copilot chat, Antigravity) and your own hand-coding. Sorts the last 30 days of sessions into threads (features, ideas, fixes, research), groups related threads into families, shows hours worked, what's going cold, and what is or isn't tracked in your issue tracker (Linear, GitHub Issues, Jira, Asana or none), and publishes it as a private board artifact you can rearrange. Use for "/defragify", "defragify", "what am I working on", "what's in flight", "what's going cold", "update my board", "how long have I spent on X", and when a board comment asks for a ticket.
 ---
 
 # defragify
 
-Sorts the person's recent Claude Code sessions into threads and keeps a private board of them, so many parallel sessions stop being clutter: what they're in, what's going cold, what's linked, what's tracked, and where the hours went.
+Sorts the person's recent coding sessions (Claude Code, Codex, Cursor, Copilot chat, Antigravity, plus coding they did by hand) into threads and keeps a private board of them, so many parallel sessions stop being clutter: what they're in, what's going cold, what's linked, what's tracked, and where the hours went.
 
 Paths (macOS, Linux and Windows alike):
 - `<python>` is whichever of `python3`, `python` or (Windows) `py -3` runs Python 3.9+ here; find it once (see below) and use it for every command. The examples say `python3`.
@@ -51,7 +51,8 @@ Match the person: some write no code, many are engineers. Default to everyday wo
 ## Run
 
 1. `python3 "<skill dir>/worklog.py" digest "<scratch>/digest.json"`
-   Gives `known_threads` (name -> status, summary, family) and every session not yet labeled or continued since: title, project, branches, active minutes, first and last prompts, files edited, whether it committed, and `ticket_mentions`.
+   Gives `known_threads` (name -> status, summary, family) and every session not yet labeled or continued since: `source`, title, project, branches, active minutes, first and last prompts, files edited, whether it committed, and `ticket_mentions`.
+   `source` is the tool: `claude`, `codex`, `cursor`, `copilot`, `antigravity`, or `manual`. A `manual` session is one repo-day of coding with no AI session running: editor saves and the person's own commits, with commit subjects (or "Edited <files>") as its prompts. Antigravity sessions carry the agent's task summaries instead of prompts, since Antigravity encrypts its transcripts.
    If a board exists (`<home>/board_url.txt`), read its `state` and `requests` collections. The person's `state` edits outrank your labels: a thread they moved to Done or Dropped (or removed) stays there unless a new session clearly reopens the work, and then it reappears by itself because the session is newer than the edit. `mergedInto` is the slug of the thread they folded this one into: label new sessions for that work with the target's name. A `note` is their own wording; keep its intent if the thread moves on.
 2. Label each session into one or more threads. Write `<scratch>/labels.json` as
    `{"<full session id>": [{"thread": "...", "status": "...", "note": "...", "summary": "...", "family": "...", "tickets": ["..."]}]}`
@@ -61,7 +62,7 @@ Match the person: some write no code, many are engineers. Default to everyday wo
    - **summary**: 2-3 plain sentences on the whole thread so far: what it is, what's done, where it stands. Update the thread's current summary.
    - **family**: the larger effort this thread belongs to ("Checkout revamp", "Research"). Reuse existing family names; a handful per board, not one per thread.
    - **tickets**: ids from the configured tracker that this session actually worked on or created for the thread, in the tracker's id format. Leave out passing mentions. Empty for tracker none.
-   - Quick questions and machine setup go in one "Setup & admin" thread as `shipped`. A session touching two threads gets two entries.
+   - Quick questions and machine setup go in one "Setup & admin" thread as `shipped`. A `manual` session goes to the thread its commits or files belong to; a lone config or `.env` tweak goes to "Setup & admin". A session touching two threads gets two entries.
    **Work in batches.** A first run can find hundreds of sessions. Never read the whole digest at once: take about 30 sessions at a time (oldest first), label them, and run step 3 for that batch before reading the next. Each saved batch drops out of the next `digest`, so an interrupted run picks up where it stopped. Tell the person how many sessions there are and that the first run takes a while; later runs only see what's new.
 3. `python3 "<skill dir>/worklog.py" label "<scratch>/labels.json"` (once per batch)
 4. If the tracker isn't none: handle every `requests` doc still `pending` (see Ticket requests), then refresh statuses as `trackers/<kind>.md` describes and write `<home>/tracker.json`:

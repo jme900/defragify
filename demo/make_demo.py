@@ -261,7 +261,18 @@ def main():
     (home / "config.json").write_text(json.dumps(config, indent=1), encoding="utf-8")
     (home / "labels.json").write_text(json.dumps(labels, indent=1), encoding="utf-8")
     (home / "tracker.json").write_text(json.dumps(tracker, indent=1), encoding="utf-8")
-    env = {**os.environ, "DEFRAGIFY_HOME": str(home), "DEFRAGIFY_PROJECTS": str(OUT / "projects")}
+    # Every other source (Codex, editors, git) points at an empty folder so no real work reaches the demo.
+    empty = str(home / "empty")
+    env = {
+        **os.environ,
+        "DEFRAGIFY_HOME": str(home),
+        "DEFRAGIFY_PROJECTS": str(OUT / "projects"),
+        "CODEX_HOME": empty,
+        "APPDATA": empty,
+        "XDG_CONFIG_HOME": empty,
+        "HOME": empty,
+        "USERPROFILE": empty,
+    }
     subprocess.run([sys.executable, str(SKILL), "board", str(OUT / "board.html")], env=env, check=True)
 
 
