@@ -1,26 +1,27 @@
-<title>Work in Flight</title>
+<title>defragify</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Silkscreen&display=swap">
 <style>
-/* Layout: a sentence and an hours chart up top, one control bar, then the open columns; finished work folds away */
+/* Layout: brand mark, a sentence and a defrag map of hours up top, one control bar, then the open columns */
 :root {
-  --bg: #f3f5f8; --surface: #ffffff; --line: #dfe3ea; --ink: #18202c; --muted: #5f6878;
-  --accent: #2f5bd3; --accent-bg: #e7edfb; --fade: #c2412d; --fade-bg: #fbeae6;
-  --idea: #7a4fc9; --building: #2f5bd3; --waiting: #b7791f; --shipped: #2f8a55; --dropped: #8a919c;
+  --bg: #f3f5f6; --surface: #ffffff; --line: #dde3e1; --ink: #141a1f; --muted: #5b6670;
+  --accent: #0f8f45; --accent-bg: #e3f4e9; --brand: #0f9d4a; --matrix: #00c838;
+  --pixel: "Silkscreen", ui-monospace, Consolas, monospace; --fade: #c2412d; --fade-bg: #fbeae6;
+  --idea: #7a4fc9; --building: #2f5bd3; --waiting: #b7791f; --shipped: #2b8a86; --dropped: #8a919c;
   --cell: #e6e9ef;
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #12161d; --surface: #1a2029; --line: #2a323e; --ink: #e5e9ef; --muted: #98a1af;
-  --accent: #7d9bf0; --accent-bg: #222c40; --fade: #ef8a76; --fade-bg: #3a221e;
-  --idea: #b296ec; --building: #7d9bf0; --waiting: #e0ad5a; --shipped: #6cc492; --dropped: #8a919c;
+  --bg: #0e1214; --surface: #161c1f; --line: #263034; --ink: #e6ecea; --muted: #94a19c;
+  --accent: #3ddc84; --accent-bg: #15301f; --brand: #3ddc84; --matrix: #00ff41; --fade: #ef8a76; --fade-bg: #3a221e;
+  --idea: #b296ec; --building: #7d9bf0; --waiting: #e0ad5a; --shipped: #5cc8c2; --dropped: #8a919c;
   --cell: #262d38; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #12161d; --surface: #1a2029; --line: #2a323e; --ink: #e5e9ef; --muted: #98a1af;
-  --accent: #7d9bf0; --accent-bg: #222c40; --fade: #ef8a76; --fade-bg: #3a221e;
-  --idea: #b296ec; --building: #7d9bf0; --waiting: #e0ad5a; --shipped: #6cc492; --dropped: #8a919c;
+  --bg: #0e1214; --surface: #161c1f; --line: #263034; --ink: #e6ecea; --muted: #94a19c;
+  --accent: #3ddc84; --accent-bg: #15301f; --brand: #3ddc84; --matrix: #00ff41; --fade: #ef8a76; --fade-bg: #3a221e;
+  --idea: #b296ec; --building: #7d9bf0; --waiting: #e0ad5a; --shipped: #5cc8c2; --dropped: #8a919c;
   --cell: #262d38; color-scheme: dark }
 
 body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 13px; line-height: 1.4; }
@@ -30,18 +31,34 @@ body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 button { font: inherit; }
 
-/* header */
-.head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 420px); gap: 10px 28px; align-items: end; }
-h1 { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+/* header: brand row, then the sentence beside a defrag map of hours */
+.wrap { grid-template-columns: minmax(0, 1fr); }
+.head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 440px); gap: 10px 32px; align-items: start; }
+.brand { grid-column: 1; display: flex; align-items: center; gap: 12px; }
+.brain { width: 46px; height: auto; overflow: visible; flex: none; }
+.brain rect { fill: var(--ink); }
+.word { font-family: var(--pixel); font-size: 22px; letter-spacing: .02em; line-height: 1; }
+.word b { font-weight: 400; color: var(--brand); }
+.brand .sub { font-size: 12px; color: var(--muted); margin-left: 4px; padding-left: 12px; border-left: 1px solid var(--line); }
 .sent { font-size: 19px; line-height: 1.4; margin: 0; text-wrap: balance; max-width: 60ch; }
 .sent b { font-weight: 600; }
+.sent .hrs { color: var(--brand); }
 .sent .cold { color: var(--fade); }
-.chart { display: grid; gap: 4px; min-width: 0; }
-.bars { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 2px; align-items: end; height: 54px; }
-.bars i { background: var(--cell); border-radius: 2px 2px 0 0; min-height: 2px; }
-.bars i.in { background: var(--accent); }
+.chart { grid-column: 2; grid-row: 1 / span 2; align-self: end; display: grid; gap: 5px; min-width: 0; }
+.map { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 2px; height: 72px; }
+.map .day { display: grid; grid-template-rows: repeat(var(--lv), 1fr); gap: 2px; }
+.map i { background: var(--cell); border-radius: 1px; }
+.map i.on { background: var(--brand); }
+.map i.on.out { opacity: .35; }
 .axis { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
-@media (max-width: 760px) { .head { grid-template-columns: 1fr; } .sent { font-size: 17px; } }
+@keyframes defrag {
+  from { transform: translate(var(--dx), var(--dy)); fill: var(--matrix); }
+  75% { fill: var(--matrix); }
+  to { transform: none; fill: var(--ink); }
+}
+.brain.play rect { animation: defrag 1.3s cubic-bezier(0.22, 1, 0.36, 1) var(--delay) both; }
+@media (max-width: 760px) { .head { grid-template-columns: minmax(0, 1fr); } .chart { grid-column: 1; grid-row: auto; } .sent { font-size: 17px; } .brand .sub { display: none; } }
+@media (prefers-reduced-motion: reduce) { .brain.play rect { animation: none; } }
 
 /* control bar */
 .bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; position: relative; }
@@ -193,10 +210,12 @@ footer { color: var(--muted); font-size: 11px; }
 
 <div class="wrap">
   <header class="head">
-    <div>
-      <h1>Work in Flight</h1>
-      <p class="sent" id="sent"></p>
+    <div class="brand">
+      <svg class="brain" id="brain" role="img" aria-label="defragify"></svg>
+      <span class="word">defrag<b>ify</b></span>
+      <span class="sub">what you're working on, sorted</span>
     </div>
+    <p class="sent" id="sent"></p>
     <div class="chart" id="chart"></div>
   </header>
   <div class="bar">
@@ -437,7 +456,7 @@ function sentence(all, scoped) {
   const total = all.reduce((s, t) => s + t.hours, 0);
   const when = { 1: "Today", 3: "In the last 3 days", 7: "This week", 14: "In the last 2 weeks" }[prefs.range] || `Over the last ${DATA.window_days} days`;
   const first = worked.length
-    ? `${when} you worked on <b>${worked.length} ${worked.length === 1 ? "thing" : "things"}</b> for <b>${fmtH(hours)}</b>.`
+    ? `${when} you worked on <b>${worked.length} ${worked.length === 1 ? "thing" : "things"}</b> for <b class="hrs">${fmtH(hours)}</b>.`
     : `${when === "Today" ? "Nothing worked on yet today" : `Nothing worked on ${when.toLowerCase()}`}.`;
   const bits = [`<b>${open.length}</b> ${open.length === 1 ? "is" : "are"} still open`];
   if (cold) bits.push(`<b class="cold">${cold} ${cold === 1 ? "is" : "are"} going cold</b>`);
@@ -453,10 +472,16 @@ function chart(list) {
     if (d in perDay) perDay[d] += (s.share_min || 0) / 60;
   }
   const max = Math.max(1, ...Object.values(perDay));
+  const unit = Math.max(1, Math.ceil(max / 10));
+  const levels = Math.max(4, Math.ceil(max / unit));
   const from = cutoff();
-  return `<div class="bars">${windowDays.map(d =>
-    `<i class="${d >= from ? "in" : ""}" style="height:${Math.max(3, perDay[d] / max * 100)}%" title="${fmtDate(d + "T12:00")} · ${perDay[d].toFixed(1)}h"></i>`).join("")}</div>
-    <div class="axis"><span>${fmtDate(windowDays[0] + "T12:00")}</span><span>hours worked per day · peak ${fmtH(max)}</span><span>today</span></div>`;
+  const days = windowDays.map(d => {
+    const filled = perDay[d] > 0.05 ? Math.ceil(perDay[d] / unit) : 0;
+    const cells = Array.from({ length: levels }, (_, i) => i >= levels - filled ? `<i class="on${d < from ? " out" : ""}"></i>` : "<i></i>").join("");
+    return `<span class="day" title="${fmtDate(d + "T12:00")} · ${perDay[d].toFixed(1)}h">${cells}</span>`;
+  }).join("");
+  return `<div class="map" style="--lv:${levels}">${days}</div>
+    <div class="axis"><span>${fmtDate(windowDays[0] + "T12:00")}</span><span>1 block = ${unit}h worked · peak ${fmtH(max)}</span><span>today</span></div>`;
 }
 
 function render() {
@@ -797,6 +822,24 @@ const baseFoot = `${DATA.session_count} sessions read, updated ${fmtDate(DATA.ge
   (DATA.unlabeled ? `, ${DATA.unlabeled} not yet sorted into threads` : "") +
   `. Cards fade as they age and drop off after ${DATA.window_days} days untouched.`;
 foot.textContent = baseFoot;
+const BRAIN = {"cols": 34, "rows": 30, "enc": "1ff000,1ceff00,7e76fc0,f7730e0,1cf79f78,39f1cf98,6376efcc,dcf761ee,bbff6eea,1eb7feefd,1efbfef3f,36f83ffdf,36738ffdb,3b3fe07fb,3d9fff9fb,31c87fce7,2f6f0fe0e,2fff71b7c,3dfbfe778,1ffcff700,1f1f93700,e3fff00,7fc3fc00,7fecf800,3fee0000,1fd80000,7b00000,700000,600000,e00000"};
+(function drawBrain() {
+  const el = document.getElementById("brain");
+  const step = 7, size = 6, w = BRAIN.cols * step, h = BRAIN.rows * step;
+  el.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const rects = [];
+  BRAIN.enc.split(",").forEach((hex, r) => {
+    const bits = BigInt("0x" + hex);
+    for (let c = 0; c < BRAIN.cols; c++) {
+      if ((bits >> BigInt(c)) & 1n) {
+        const dx = Math.round((Math.random() - 0.5) * w * 1.1), dy = Math.round((Math.random() - 0.5) * h * 1.1);
+        rects.push(`<rect x="${c * step}" y="${r * step}" width="${size}" height="${size}" style="--dx:${dx}px;--dy:${dy}px;--delay:${Math.round(Math.random() * 900)}ms"></rect>`);
+      }
+    }
+  });
+  el.innerHTML = rects.join("");
+  el.classList.add("play");
+})();
 render();
 
 (async () => {

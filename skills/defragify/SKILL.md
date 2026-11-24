@@ -1,11 +1,11 @@
 ---
 name: defragify
-description: Defragments your brain. A board of everything you've been working on across Claude Code sessions. Sorts the last 30 days of sessions into threads (features, ideas, fixes, research), groups related threads into families, shows hours worked, what's going cold, and what is or isn't tracked in your issue tracker (Linear, GitHub Issues, Jira, Asana or none), and publishes it as a private "Work in Flight" artifact you can rearrange. Use for "/defragify", "defragify", "what am I working on", "what's in flight", "what's going cold", "update my board", "how long have I spent on X", and when a board comment asks for a ticket.
+description: Defragments your brain. A board of everything you've been working on across Claude Code sessions. Sorts the last 30 days of sessions into threads (features, ideas, fixes, research), groups related threads into families, shows hours worked, what's going cold, and what is or isn't tracked in your issue tracker (Linear, GitHub Issues, Jira, Asana or none), and publishes it as a private board artifact you can rearrange. Use for "/defragify", "defragify", "what am I working on", "what's in flight", "what's going cold", "update my board", "how long have I spent on X", and when a board comment asks for a ticket.
 ---
 
 # defragify
 
-Sorts the person's recent Claude Code sessions into threads and keeps a private board of them, titled "Work in Flight", so many parallel sessions stop being clutter: what they're in, what's going cold, what's linked, what's tracked, and where the hours went.
+Sorts the person's recent Claude Code sessions into threads and keeps a private board of them, so many parallel sessions stop being clutter: what they're in, what's going cold, what's linked, what's tracked, and where the hours went.
 
 Paths (macOS, Linux and Windows alike):
 - `<python>` is whichever of `python3`, `python` or (Windows) `py -3` runs Python 3.9+ here; find it once (see below) and use it for every command. The examples say `python3`.

@@ -30,11 +30,13 @@
 
 ---
 
-With Claude you can run ten sessions across three repos and chase a dozen ideas in a week. Most of that is fine to forget. Some of it isn't, and it gets lost in the clutter: the idea you'd half-explored, the fix waiting on a review, the feature that was never ticketed. defragify reads your recent sessions, sorts them into threads, and keeps them on one private board called Work in Flight, so you can see where you're at and let the rest go.
+With Claude you can run ten sessions across three repos and chase a dozen ideas in a week. Most of that is fine to forget. Some of it isn't, and it gets lost in the clutter: the idea you'd half-explored, the fix waiting on a review, the feature that was never ticketed. defragify reads your recent sessions, sorts them into threads, and keeps them on one private board, so you can see where you're at and let the rest go.
 
-![The Work in Flight board, showing a made-up team's threads](docs/board.png)
-
-*Made-up demo data.*
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/board-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/board-light.png">
+  <img alt="The defragify board: hours worked per day as a defrag map, what's going cold, and open threads in Ideas, Building and Waiting columns" src="docs/board-light.png">
+</picture>
 
 ## Quick start
 
