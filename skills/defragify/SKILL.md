@@ -68,7 +68,7 @@ Match the person: some write no code, many are engineers. Default to everyday wo
    `{"<id>": {"state": "<status name>", "column": "idea|building|waiting|shipped|dropped", "updated": "<ISO time>", "url": "<optional>", "label": "<optional short name>"}}`
    for every linked ticket: every label `tickets` entry, every `state` doc's `ticketsAdded`, every `done` request's `ticket`. Map `state` to `column` with the tracker page's defaults plus `tracker.columns`. The board moves each card to its least-advanced open ticket (dropped ones ignored), so this file keeps cards in step with the tracker.
 5. `python3 "<skill dir>/worklog.py" board "<scratch>/work_in_flight.html"`
-6. Publish it with the artifact tool. With a URL in `board_url.txt`, read that artifact first if this conversation hasn't, then publish to it without `capabilities` so the stored ones carry forward. Without one, publish a new artifact with icon `board` and `capabilities: {db: {rules: [{path: "", read: "view", write: "owner"}]}, user: {}, comments: {}}`, and save its URL to `board_url.txt`.
+6. Publish it with the artifact tool. With a URL in `board_url.txt`, read that artifact first if this conversation hasn't, then publish to it without `capabilities` so the stored ones carry forward. Without one, publish a new artifact with icon `brain` and `capabilities: {db: {rules: [{path: "", read: "view", write: "owner"}]}, user: {}, comments: {}}`, and save its URL to `board_url.txt`.
 
 Then reply with the link and what's going cold (name, days left, note), skipping anything they moved or removed. Nothing else unless asked.
 

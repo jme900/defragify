@@ -147,17 +147,6 @@ Each tracker's details are in [`skills/defragify/trackers/`](skills/defragify/tr
 - Claude Code deletes transcripts after 30 days by default (`cleanupPeriodDays`), so the board can't look back further than that unless you raise it.
 - The transcript format isn't documented and could change in a Claude Code release. All the parsing lives in one function, `scan()` in `worklog.py`, so a fix is small.
 
-## Files
-
-```
-skills/defragify/
-  SKILL.md        what Claude does on each run
-  worklog.py      reads sessions, keeps labels, builds the board
-  board.html      the board page
-  trackers/       linear.md, github.md, jira.md, asana.md
-demo/make_demo.py builds the demo board from made-up sessions
-```
-
 ## License
 
 MIT
