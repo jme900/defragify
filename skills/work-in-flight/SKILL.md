@@ -19,11 +19,11 @@ Board database (the board artifact's db, read and written with the artifact data
 
 ## Before anything: Python
 
-The script needs Python 3.9 or newer. Check with `python3 --version` (then `python --version`). On Windows, a `python3` that opens the Microsoft Store or prints nothing means Python isn't really installed. If neither works, don't show the raw error: tell the person in one plain sentence that this needs Python, a free one-time install, and offer to install it for them (`winget install Python.Python.3.12` on Windows, `brew install python` on a Mac with Homebrew, otherwise point them to python.org). Install only once they say yes, then carry on.
+The script needs Python 3.9 or newer. Check with `python3 --version` (then `python --version`). On Windows, a `python3` that opens the Microsoft Store or prints nothing means Python isn't really installed. If neither works, say in one plain sentence that this needs Python, a free one-time install (add the actual error for anyone who wants it), and offer to install it for them (`winget install Python.Python.3.12` on Windows, `brew install python` on a Mac with Homebrew, otherwise point them to python.org). Install only once they say yes, then carry on.
 
 ## First run: setup
 
-Many people running this don't write code, so ask in everyday words, never in config terms ("Should this count every project you've worked on, or only some folders?", not "scope" or "GitHub orgs"). If `config` says the file doesn't exist, ask these four questions in one round (use the ask-user tool where there is one), then write `<home>/config.json`:
+Match the person: some write no code, many are engineers. Default to everyday words ("Should this count every project you've worked on, or only some folders?"), and switch to the precise terms (GitHub orgs, paths, config fields) as soon as they talk that way or ask. Never hide an option to keep it simple. If `config` says the file doesn't exist, ask these four questions in one round (use the ask-user tool where there is one), then write `<home>/config.json`:
 
 1. **Which sessions count?** Every repo (default), only repos under certain GitHub orgs, or only certain folders. Maps to `scope.github_orgs` / `scope.paths`; both empty means everything.
 2. **Issue tracker?** Linear, GitHub Issues, Jira, Asana, or none. Maps to `tracker.kind`. For anything but none, read `trackers/<kind>.md` and fill in what it says (link pattern, where new tickets go). Check the connector or CLI it needs is available and say so if not.

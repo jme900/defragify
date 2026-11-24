@@ -1,6 +1,6 @@
 {
   "name": "work-in-flight",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A board of everything you've been working on across Claude Code sessions: threads, hours worked, what's going cold, what's linked and what's tracked.",
   "author": {
     "name": "Jesse English"
