@@ -1,8 +1,8 @@
-# Work in Flight
+# defragify
 
-A board of everything you've been working on with Claude Code, built from your own sessions.
+Defragment your brain. A board of everything you've been working on with Claude Code, built from your own sessions.
 
-With Claude you can run ten sessions across three repos and chase a dozen ideas in a week. Most of that is fine to forget. Some of it isn't, and it gets lost in the clutter: the idea you'd half-explored, the fix waiting on a review, the feature that was never ticketed. Work in Flight reads your recent sessions, sorts them into threads, and keeps them on one private board, so you can see where you're at and let the rest go.
+With Claude you can run ten sessions across three repos and chase a dozen ideas in a week. Most of that is fine to forget. Some of it isn't, and it gets lost in the clutter: the idea you'd half-explored, the fix waiting on a review, the feature that was never ticketed. defragify reads your recent sessions, sorts them into threads, and keeps them on one private board called Work in Flight, so you can see where you're at and let the rest go.
 
 ![The Work in Flight board, showing a made-up team's threads](docs/board.png)
 
@@ -12,11 +12,11 @@ With Claude you can run ten sessions across three repos and chase a dozen ideas 
 
 No coding needed. In Claude Code:
 
-1. Type `/plugin marketplace add jme900/work-in-flight` and press Enter.
-2. Type `/plugin install work-in-flight@work-in-flight` and press Enter. (Using Claude Code inside VS Code? See [Install](#install) below.)
-3. Start a new session and type `/work-in-flight`. Answer four quick questions, and Claude builds your board and gives you the link.
+1. Type `/plugin marketplace add jme900/defragify` and press Enter.
+2. Type `/plugin install defragify@defragify` and press Enter. (Using Claude Code inside VS Code? See [Install](#install) below.)
+3. Start a new session and type `/defragify`. Answer four quick questions, and Claude builds your board and gives you the link.
 
-The first run reads up to a month of your sessions, so give it a few minutes. If you don't have Python, Claude will say so and offer to install it. After that, run `/work-in-flight` whenever you want the board brought up to date.
+The first run reads up to a month of your sessions, so give it a few minutes. If you don't have Python, Claude will say so and offer to install it. After that, run `/defragify` whenever you want the board brought up to date.
 
 ## What it shows
 
@@ -31,20 +31,27 @@ The first run reads up to a month of your sessions, so give it a few minutes. If
 In Claude Code:
 
 ```
-/plugin marketplace add jme900/work-in-flight
-/plugin install work-in-flight@work-in-flight
+/plugin marketplace add jme900/defragify
+/plugin install defragify@defragify
 ```
 
 In the VS Code extension, where `/plugin` isn't available, run the same two steps in a terminal:
 
 ```
-claude plugin marketplace add jme900/work-in-flight
-claude plugin install work-in-flight@work-in-flight
+claude plugin marketplace add jme900/defragify
+claude plugin install defragify@defragify
 ```
 
 If `claude` isn't on your PATH, the extension bundles it. On Windows it's under `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<version>-win32-x64\resources\native-binary\claude.exe`. Start a new session or reload the window afterwards so the skill loads.
 
-Then run `/work-in-flight`. The first run asks four questions: which sessions count, which tracker you use, how new tickets should be written, and how many days to keep. It then sorts your sessions and publishes your board as a private artifact on claude.ai. Run it again whenever you want the board brought up to date.
+**Had it as work-in-flight?** That was this plugin's old name. Remove the old one, install as above, and rename your `~/.claude/work-in-flight` folder to `~/.claude/defragify` to keep your board, settings and labels:
+
+```
+claude plugin uninstall work-in-flight@work-in-flight
+claude plugin marketplace remove work-in-flight
+```
+
+Then run `/defragify`. The first run asks four questions: which sessions count, which tracker you use, how new tickets should be written, and how many days to keep. It then sorts your sessions and publishes your board as a private artifact on claude.ai. Run it again whenever you want the board brought up to date.
 
 ## Using the board
 
@@ -64,7 +71,7 @@ Click a card to open it: a short summary of the thread, its tickets, hours, sess
 
 Your changes stick. A card you move stays put until you work on that thread again or its tickets change. Merges and ticket links stay until you undo them.
 
-**Keep a session open** and run `/work-in-flight` in it once a day. That session then handles Create new within a minute. With no session open, the request waits for your next run.
+**Keep a session open** and run `/defragify` in it once a day. That session then handles Create new within a minute. With no session open, the request waits for your next run.
 
 ## Trackers
 
@@ -78,13 +85,13 @@ Claude does all tracker work through the connector or CLI you already have.
 | Asana | Asana connector | Best effort, not yet run against a real workspace |
 | None | Nothing | Tested. Ticket controls are hidden |
 
-Each tracker's details are in [`skills/work-in-flight/trackers/`](skills/work-in-flight/trackers/). Reports from Jira and Asana users are welcome.
+Each tracker's details are in [`skills/defragify/trackers/`](skills/defragify/trackers/). Reports from Jira and Asana users are welcome.
 
 ## What it reads and where it goes
 
 - It reads Claude Code's session transcripts in `~/.claude/projects/` on your machine. They hold your prompts and Claude's tool calls.
 - Claude labels new sessions in your own Claude Code session, the same way it works on anything else you ask.
-- Your settings and labels stay in `~/.claude/work-in-flight/`.
+- Your settings and labels stay in `~/.claude/defragify/`.
 - The board is a private artifact in your claude.ai account. It holds thread names, notes, summaries and session titles, not your code.
 
 ## Requirements and limits
@@ -97,7 +104,7 @@ Each tracker's details are in [`skills/work-in-flight/trackers/`](skills/work-in
 ## Files
 
 ```
-skills/work-in-flight/
+skills/defragify/
   SKILL.md        what Claude does on each run
   worklog.py      reads sessions, keeps labels, builds the board
   board.html      the board page

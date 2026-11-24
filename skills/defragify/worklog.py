@@ -1,4 +1,4 @@
-"""Work in Flight: what you've been working on across Claude Code sessions, as threads on a board.
+"""defragify: what you've been working on across Claude Code sessions, as threads on a board.
 
 python worklog.py config            print the effective config
 python worklog.py digest            sessions not yet labeled (or continued since), as JSON
@@ -6,7 +6,7 @@ python worklog.py label FILE        merge {session_id: [{thread, status, note, s
 python worklog.py board OUT.html    render the board from labels, tracker statuses and session stats
 python worklog.py context NAME...   everything recorded for the named threads' sessions, for writing a ticket
 
-WIF_HOME (default ~/.claude/work-in-flight) and WIF_PROJECTS (default ~/.claude/projects) override the folders.
+DEFRAGIFY_HOME (default ~/.claude/defragify) and DEFRAGIFY_PROJECTS (default ~/.claude/projects) override the folders.
 """
 
 import json
@@ -22,8 +22,8 @@ from functools import cache
 from pathlib import Path
 
 IDLE = timedelta(minutes=5)
-HOME = Path(os.environ.get("WIF_HOME") or Path.home() / ".claude" / "work-in-flight")
-PROJECTS = Path(os.environ.get("WIF_PROJECTS") or Path.home() / ".claude" / "projects")
+HOME = Path(os.environ.get("DEFRAGIFY_HOME") or Path.home() / ".claude" / "defragify")
+PROJECTS = Path(os.environ.get("DEFRAGIFY_PROJECTS") or Path.home() / ".claude" / "projects")
 CONFIG = HOME / "config.json"
 LABELS = HOME / "labels.json"
 TRACKER = HOME / "tracker.json"

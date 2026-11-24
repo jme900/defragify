@@ -350,7 +350,7 @@ function ticketRow(t, isOpen) {
   const shown = isOpen ? t.tickets : t.tickets.slice(0, 3);
   const chips = shown.map(id => {
     const e = ENTRIES[id];
-    const tip = e ? `${id} · ${e.state}` : `${id} · status shows after the next /work-in-flight run`;
+    const tip = e ? `${id} · ${e.state}` : `${id} · status shows after the next /defragify run`;
     const href = linkFor(id);
     const name = esc(e?.label || id);
     return `<span class="tk" title="${esc(tip)}"><i class="sd" style="${e?.column in LABEL ? `--c:var(--${e.column})` : ""}"></i>` +
@@ -359,7 +359,7 @@ function ticketRow(t, isOpen) {
   });
   if (shown.length < t.tickets.length) chips.push(`<span class="tk muted" title="${esc(t.tickets.join(", "))}">+${t.tickets.length - shown.length}</span>`);
   const r = t.request;
-  if (r?.status === "pending") chips.push(`<span class="tk muted" title="${r.via === "claude" ? "Sent to your open Claude session" : "Queued for the next /work-in-flight run"}">Ticket requested…</span>`);
+  if (r?.status === "pending") chips.push(`<span class="tk muted" title="${r.via === "claude" ? "Sent to your open Claude session" : "Queued for the next /defragify run"}">Ticket requested…</span>`);
   if (r?.status === "failed") chips.push(`<span class="tk failed" title="${esc(r.message || "")}">Ticket not created</span>`);
   if (edit) chips.push(addingFor === t.id
     ? `<input class="tk-input" id="tk-add-${t.id}" data-tkinput="${t.id}" placeholder="ids or links ↵" autocomplete="off" aria-label="Link tickets">` +
@@ -469,7 +469,7 @@ function render() {
   const removed = shown.filter(t => t.removed);
 
   document.getElementById("sent").innerHTML = DATA.threads.length ? sentence(list, scoped)
-    : "Nothing sorted yet. Run <b>/work-in-flight</b> in Claude Code to turn your recent sessions into threads.";
+    : "Nothing sorted yet. Run <b>/defragify</b> in Claude Code to turn your recent sessions into threads.";
   document.getElementById("chart").innerHTML = chart(list);
 
   const fading = list.filter(t => !t.removed && OPEN.has(t.status) && t.left <= 7).sort((a, b) => a.left - b.left);
@@ -584,7 +584,7 @@ async function requestTicket(id, el) {
     if (comments && (await comments.canSendToClaude()) === "available") {
       const anchor = await comments.anchorFor(el.closest(".card"));
       await comments.sendToClaude({ anchor, text:
-        `Work in Flight ticket request: create a ${DATA.tracker.kind} ticket for the thread "${t.name}" (board request requests/${id}). Follow the work-in-flight skill's ticket request steps.` });
+        `defragify ticket request: create a ${DATA.tracker.kind} ticket for the thread "${t.name}" (board request requests/${id}). Follow the defragify skill's ticket request steps.` });
       via = "claude";
     }
   } catch {}
@@ -594,7 +594,7 @@ async function requestTicket(id, el) {
   render();
   try {
     await db.collection("requests").doc(id).set(body);
-    toast(via === "claude" ? `Ticket requested for ${t.name}. Claude is on it.` : `Ticket requested for ${t.name}. Queued for the next /work-in-flight run.`);
+    toast(via === "claude" ? `Ticket requested for ${t.name}. Claude is on it.` : `Ticket requested for ${t.name}. Queued for the next /defragify run.`);
   } catch {
     if (before) REQ.set(id, before); else REQ.delete(id);
     render();

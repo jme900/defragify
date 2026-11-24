@@ -1,15 +1,15 @@
 ---
-name: work-in-flight
-description: A board of everything you've been working on across Claude Code sessions. Sorts the last 30 days of sessions into threads (features, ideas, fixes, research), groups related threads into families, shows hours worked, what's going cold, and what is or isn't tracked in your issue tracker (Linear, GitHub Issues, Jira, Asana or none), and publishes it as a private "Work in Flight" artifact you can rearrange. Use for "/work-in-flight", "what am I working on", "what's in flight", "what's going cold", "update my board", "how long have I spent on X", and when a board comment asks for a ticket.
+name: defragify
+description: Defragments your brain. A board of everything you've been working on across Claude Code sessions. Sorts the last 30 days of sessions into threads (features, ideas, fixes, research), groups related threads into families, shows hours worked, what's going cold, and what is or isn't tracked in your issue tracker (Linear, GitHub Issues, Jira, Asana or none), and publishes it as a private "Work in Flight" artifact you can rearrange. Use for "/defragify", "defragify", "what am I working on", "what's in flight", "what's going cold", "update my board", "how long have I spent on X", and when a board comment asks for a ticket.
 ---
 
-# Work in Flight
+# defragify
 
-Sorts the person's recent Claude Code sessions into threads and keeps a private board of them, so many parallel sessions stop being clutter: what they're in, what's going cold, what's linked, what's tracked, and where the hours went.
+Sorts the person's recent Claude Code sessions into threads and keeps a private board of them, titled "Work in Flight", so many parallel sessions stop being clutter: what they're in, what's going cold, what's linked, what's tracked, and where the hours went.
 
 Paths:
 - `<skill dir>` is this skill's base directory. Run the script with `python3 "<skill dir>/worklog.py" <command>` (`python` where that's the name). It needs only the standard library.
-- `<home>` is `~/.claude/work-in-flight/`: `config.json`, `labels.json`, `tracker.json`, `board_url.txt`. `python3 "<skill dir>/worklog.py" config` prints the effective config and whether it exists.
+- `<home>` is `~/.claude/defragify/`: `config.json`, `labels.json`, `tracker.json`, `board_url.txt`. `python3 "<skill dir>/worklog.py" config` prints the effective config and whether it exists.
 - `<scratch>` is your scratchpad (or a temp folder).
 
 Board database (the board artifact's db, read and written with the artifact data tool on the board URL):
@@ -72,7 +72,7 @@ Then reply with the link and what's going cold (name, days left, note), skipping
 
 ## Ticket requests
 
-Arrive as a comment sent to Claude on the board ("Work in Flight ticket request: ... requests/<slug>"), or as a `pending` doc found during a run. Same steps either way:
+Arrive as a comment sent to Claude on the board ("defragify ticket request: ... requests/<slug>"), or as a `pending` doc found during a run. Same steps either way:
 
 1. Read `requests/<slug>` for the thread name, plus every thread whose `state` doc has `mergedInto` equal to that slug.
 2. `python3 "<skill dir>/worklog.py" context "<name>" ["<merged name>" ...]` for every session's prompts, files and commits. Check your memory notes for anything about the thread.
@@ -83,7 +83,7 @@ Arrive as a comment sent to Claude on the board ("Work in Flight ticket request:
 
 ## All-day session
 
-To have board requests handled within a minute, run `/work-in-flight` once in a session that stays open. Its publish arms comment replies for that session, and the board's Create new button sends requests there. With no session listening, the request waits for the next run.
+To have board requests handled within a minute, run `/defragify` once in a session that stays open. Its publish arms comment replies for that session, and the board's Create new button sends requests there. With no session listening, the request waits for the next run.
 
 ## Questions
 

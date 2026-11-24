@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "out"
-SKILL = ROOT.parent / "skills" / "work-in-flight" / "worklog.py"
+SKILL = ROOT.parent / "skills" / "defragify" / "worklog.py"
 NOW = datetime.now(UTC).replace(second=0, microsecond=0)
 
 # name, family, status, note, summary, tickets [(id, state, column)], sessions [(days_ago, minutes, repo, title)]
@@ -261,7 +261,7 @@ def main():
     (home / "config.json").write_text(json.dumps(config, indent=1), encoding="utf-8")
     (home / "labels.json").write_text(json.dumps(labels, indent=1), encoding="utf-8")
     (home / "tracker.json").write_text(json.dumps(tracker, indent=1), encoding="utf-8")
-    env = {**os.environ, "WIF_HOME": str(home), "WIF_PROJECTS": str(OUT / "projects")}
+    env = {**os.environ, "DEFRAGIFY_HOME": str(home), "DEFRAGIFY_PROJECTS": str(OUT / "projects")}
     subprocess.run([sys.executable, str(SKILL), "board", str(OUT / "board.html")], env=env, check=True)
 
 
