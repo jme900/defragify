@@ -327,7 +327,11 @@ function view() {
       const live = known.filter(e => e.column !== "dropped");
       t.status = live.length ? live.reduce((a, b) => (RANK[b.column] < RANK[a.column] ? b : a)).column : "dropped";
       t.fromTracker = true;
-      for (const e of known) if (e.updated && newer(e.updated, changed)) changed = e.updated;
+      // A ticket can't have changed after this board was built; a later stamp would beat every move.
+      for (const e of known) {
+        const at = e.updated && newer(e.updated, DATA.generated) ? DATA.generated : e.updated;
+        if (at && newer(at, changed)) changed = at;
+      }
     }
     const o = STATE.get(root);
     const live = o && !newer(changed, o.at);
